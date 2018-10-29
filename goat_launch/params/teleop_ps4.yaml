@@ -1,0 +1,16 @@
+serial_node:
+    baud: 57600
+
+joy_node:
+    deadzone: 0.05
+    coalesce_interval: 0.02
+    autorepeat_rate: 0.0 # 0.0 -> disabled
+
+teleop_node: # ps4 controls - right bumper to activate, left stick to navigate
+    enable_button: 5
+    enable_turbo_button: -1
+    axis_linear: 1
+    scale_linear: 1.0 # 1 m/s
+    scale_linear_turbo: 2.2352 # 5 mph -> m/s
+    axis_angular: 3
+    scale_angular: 2.0 # 2 rad/s

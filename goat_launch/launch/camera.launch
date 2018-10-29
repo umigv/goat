@@ -1,0 +1,30 @@
+<!-- launches zed_wrapper_node -->
+<launch>
+    <!-- 0: default to first found -->
+    <arg name="serial_number" default="0"/>
+    <!-- 0: 4416x1242, 1: 3840x1080, 2: 2560x720, 3: 1344x376 -->
+    <arg name="resolution" default="3"/>
+    <!-- 2k: <= 15, 1080: <= 30, 720: <= 60, WVGA: <= 100 -->
+    <arg name="frame_rate" default="100"/>
+    <!-- depth quality; 0: none, 1: performance, 2: medium, 3: quality -->
+    <arg name="quality" default="1"/>
+
+    <rosparam command="load" file="$(find goat_launch)/params/camera.yaml"/>
+
+    <!-- not required, could be simulating -->
+    <node name="zed_wrapper_node" pkg="zed_wrapper" type="zed_wrapper_node"
+          output="screen" clear_params="true">
+        <param name="serial_number" value="$(arg serial_number)"/>
+        <param name="resolution" value="$(arg resolution)"/>
+        <param name="quality" value="$(arg quality)" />
+        <param name="frame_rate" value="$(arg frame_rate)" />
+    </node>
+
+    <param name="camera_description"
+           textfile="$(find zed_wrapper)/urdf/zed.urdf"/>
+
+    <node name="zed_state_publisher" pkg="robot_state_publisher"
+          type="robot_state_publisher">
+        <remap from="robot_description" to="camera_description"/>
+    </node>
+</launch>

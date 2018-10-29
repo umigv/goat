@@ -1,0 +1,11 @@
+<launch>
+	<arg name="goal_id" default=""/>
+	<arg name="filename" default="practice.txt"/>
+	<arg name="threshold" default="0.5"/>
+
+	<node name="make_goal" pkg="make_goal" type="make_goal" output="screen" clear_params="true">
+		<param name="goal_id" value="$(arg goal_id)"/>
+		<param name="goals_filename" value="$(find goat_launch)/params/practice.txt"/>
+		<param name="threshold" value="$(arg threshold)"/>
+	</node>
+</launch>

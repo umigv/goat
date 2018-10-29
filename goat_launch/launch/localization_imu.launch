@@ -1,0 +1,11 @@
+<!-- runs robot_localization's ukf_localization_node with IMU odometry -->
+<launch>
+    <rosparam command="load"
+              file="$(find goat_launch)/params/localization.yaml"/>
+    <rosparam command="load"
+              file="$(find goat_launch)/params/localization_i.yaml"/>
+
+    <node name="ukf_localization_node" pkg="robot_localization"
+          type="ukf_localization_node" output="screen" required="true"
+          clear_params="true"/>
+</launch>

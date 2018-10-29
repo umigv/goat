@@ -1,0 +1,7 @@
+<class_libraries>
+    <library path="libwhite_line_layer">
+        <class type="obstacle_detector::WhiteLineCostmapLayer" base_class_type="costmap_2d::Layer">
+            <description>White line detection and avoidance layer.</description>
+        </class>
+    </library>
+</class_libraries>

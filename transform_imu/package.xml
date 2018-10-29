@@ -1,0 +1,21 @@
+<package format = "2">
+	<name>transform_imu</name>
+	<version>0.2.0</version>
+	<description>
+		Transforms Imu and MagneticField messages from NED to ENU.
+	</description>
+	<maintainer email="gregjm@umich.edu">Gregory Meyer</maintainer>
+	<license>BSD 3-Clause License</license>
+
+	<url type="repository">https://github.com/umigv/transform_imu</url>
+	<author>Gregory Meyer</author>
+
+	<buildtool_depend>catkin</buildtool_depend>
+
+	<depend>roscpp</depend>
+	<depend>sensor_msgs</depend>
+	<depend>tf2_geometry_msgs</depend>
+	<depend>tf2_ros</depend>
+	<depend>tf2</depend>
+	<depend>umigv_utilities</depend>
+</package>

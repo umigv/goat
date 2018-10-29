@@ -1,0 +1,17 @@
+<package format="2">
+    <name>cmd_vel_selector</name>
+    <version>0.1.0</version>
+    <description>Subscribes to multiple cmd_vel topics and allows users to select one to rebroadcast.</description>
+    <maintainer email="gregjm@umich.edu">Gregory Meyer</maintainer>
+    <license>BSD 3-Clause License</license>
+
+    <url type="repository">https://github.com/umigv/cmd_vel_selector</url>
+    <author>Gregory Meyer</author>
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <depend>geometry_msgs</depend>
+    <depend>roscpp</depend>
+    <depend>sensor_msgs</depend>
+    <depend>std_msgs</depend>
+</package>

@@ -1,0 +1,11 @@
+<!-- runs rplidarNode -->
+<launch>
+    <arg name="port" default="/dev/ttyUSB0"/>
+
+    <rosparam command="load" file="$(find goat_launch)/params/laser.yaml"/>
+
+    <node name="rplidarNode" pkg="rplidar_ros" type="rplidarNode"
+          output="screen" required="true" clear_params="true">
+        <param name="serial_port" value="$(arg port)"/>
+    </node>
+</launch>

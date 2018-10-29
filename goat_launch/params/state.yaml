@@ -1,0 +1,16 @@
+joint_state_publisher:
+    dependent_joints: {}
+    use_mimic_tags: true
+    zeros: {}
+    use_smallest_joint_limits: true
+    publish_default_positions: true
+    publish_default_velocities: false
+    publish_default_efforts: false
+    rate: 50
+    source_list: [/encoders/state]
+
+robot_state_publisher:
+    tf_prefix: ""
+    ignore_timestamp: false
+    use_tf_static: true
+    publish_frequency: 50.0

@@ -1,0 +1,17 @@
+<package format="2">
+    <name>encoder_odometry</name>
+    <version>0.2.0</version>
+    <description>Publishes TwistWithCovarianceStamped messages from wheel JointState messages.</description>
+    <maintainer email="gregjm@umich.edu">Gregory Meyer</maintainer>
+    <license>BSD 3-Clause License</license>
+
+    <url type="repository">https://github.com/umigv/encoder_odometry</url>
+    <author>Gregory Meyer</author>
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <depend>geometry_msgs</depend>
+    <depend>roscpp</depend>
+    <depend>sensor_msgs</depend>
+    <depend>umigv_utilities</depend>
+</package>

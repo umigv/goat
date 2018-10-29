@@ -1,0 +1,42 @@
+zed_wrapper_node:
+    zed_id: 0
+    camera_model: 0
+    publish_tf: false
+
+    odometry_frame: "odom"
+    base_frame: "zed_center"
+    camera_frame: "zed_left_camera"
+    depth_frame: "zed_depth_camera"
+
+    sensing_mode: 0
+    odometry_db: ""
+    openni_depth_mode: 0
+    gpu_id: -1
+
+    confidence: 100
+    gain: 100
+    exposure: 100
+    auto_exposure: true
+    depth_stabilization: 1
+
+    rgb_topic: "camera/rgb/image"
+    rgb_raw_topic: "camera/rgb/image_raw"
+    rgb_cam_info_topic: "camera/rgb/camera_info"
+    rgb_cam_info_raw_topic: "camera/rgb/camera_info_raw"
+
+    left_topic: "camera/left/image_rect"
+    left_raw_topic: "camera/left/image_rect_raw"
+    left_cam_info_topic: "camera/left/camera_info"
+    left_cam_info_raw_topic: "camera/left/camera_info_raw"
+
+    right_topic: "camera/right/image_rect"
+    right_raw_topic: "camera/right/image_rect_row"
+    right_cam_info_topic: "camera/right/camera_info"
+    right_cam_info_raw_topic: "camera/right/camera_info_raw"
+
+    depth_topic: "camera/depth/image"
+    depth_cam_info_topic: "camera/depth/camera_info"
+
+    point_cloud_topic: "camera/cloud"
+
+    odometry_topic: "camera/odometry"

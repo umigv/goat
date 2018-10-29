@@ -1,0 +1,2 @@
+NavfnROS:
+  use_dijkstra: false

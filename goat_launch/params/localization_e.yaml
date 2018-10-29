@@ -1,0 +1,10 @@
+ukf_localization_node:
+    twist0: "encoders/twist"
+    twist0_config: [false, false, false,
+                    false, false, false,
+                    true, true, false,
+                    false, false, true,
+                    false, false, false]
+    twist0_queue_size: 10
+    twist0_relative: false
+    twist0_differential: false

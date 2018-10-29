@@ -1,0 +1,7 @@
+<!-- run gmapping -->
+<launch>
+    <rosparam command="load" file="$(find goat_launch)/params/mapping.yaml"/>
+
+    <node name="slam_gmapping" pkg="gmapping" type="slam_gmapping"
+          output="screen" required="true" clear_params="true"/>
+</launch>

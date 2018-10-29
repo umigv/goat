@@ -1,0 +1,12 @@
+pipline {
+	agent any
+
+	stages {
+		stage('Build') {
+			steps {
+				echo 'Building Obstacle Detector...'
+				catkin build obstacle-detector
+			}
+		}
+	}
+}

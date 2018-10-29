@@ -1,0 +1,22 @@
+<package format="2">
+    <name>make_goal</name>
+    <version>0.4.1</version>
+    <description>GPS goal guidance.</description>
+    <maintainer email="zhongmic@umich.edu">Michael Zhong</maintainer>
+    <maintainer email="gregjm@umich.edu">Gregory Meyer</maintainer>
+    <license>BSD 3-Clause License</license>
+
+    <url type="repository">https://github.com/umigv/goat_launch</url>
+    <author>Michael Zhong</author>
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <depend>geodesy</depend>
+    <depend>geographic_msgs</depend>
+    <depend>geometry_msgs</depend>
+    <depend>move_base_msgs</depend>
+    <depend>roscpp</depend>
+    <depend>sensor_msgs</depend>
+    <depend>std_msgs</depend>
+    <depend>umigv_utilities</depend>
+</package>

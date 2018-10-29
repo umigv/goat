@@ -1,0 +1,13 @@
+nmea_serial_driver:
+    useRMC: false
+
+navsat_transform_node:
+    frequency: 1.0
+    delay: 0.0
+    magnetic_declination_radians: 0.123045712265600235
+    yaw_offset: 1.5707963267948966
+    zero_altitude: true
+    publish_filtered_gps: true
+    broadcast_utm_transform: true
+    use_odometry_yaw: false
+    wait_for_datum: false

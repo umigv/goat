@@ -1,0 +1,14 @@
+<!-- runs phidgets_encoder encoder_odometry -->
+<launch>
+    <rosparam command="load" file="$(find goat_launch)/params/encoders.yaml"/>
+
+    <!-- not required, could be simulating -->
+    <node name="phidgets_encoder_node" pkg="phidgets_encoder"
+          type="phidgets_encoder_node" output="screen" clear_params="true">
+        <remap from="wheel_state" to="encoders/state"/>
+    </node>
+
+    <node name="encoder_odometry_node" pkg="encoder_odometry"
+          type="encoder_odometry_node" output="screen" clear_params="true"
+          required="true"/>
+</launch>

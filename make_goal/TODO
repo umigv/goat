@@ -1,0 +1,17 @@
+Michael Zhong, 4/15/2018
+
+Notes:
+
+- Currently the make_goal node operates by subscribing to /odom ("nav_msgs::Odometry" messages) and publishing to /move_base/goal. In the actual competiton, the input may be navsat (sensor_msgs/NavSatFix) messages instead. It would be ideal if we had a way to publish navsat messages to the simulation as well, since /move_base/goal only takes "move_base_msgs::MoveBaseActionGoal" data types. As a workaround, it is possible to simply subscribe to the navsat message from /fix instead of /odom, decide if we reached out desired lat/long in the make_goal node, then publish our new goal as a move_base_msgs::MoveBaseActionGoal to /move_base/goal like before.
+
+- The current threshold for error is about 0.7 (meters?). This should be adjusted to the desired threshold for actual performance. (Note: A threshold is required because there is some inaccuracy with the robot's estimate of positon)
+
+- The position estimation through the /fix topic (sensor_msgs/NavSatFix) appears to be much more accurate than the /odom topic (nav_msgs::Odometry).
+
+- /move_base/goal requires that the orientation quaternion not have the value of zero. This means the orientation must have some non-zero value. I am currently unsure of how big of an impact this has on the robot's performance.
+
+Bugs:
+
+- While testing the simulation, the robot has gotten stuck behind obstacles and been unable to proceed. I believe there may need to be a change to the decision making algorithm.
+
+- There is currently an issue where the simulation will reach a waypoint, but not recognize that it has, and continue to try to reach it until it appears to give up and stop functioning. Try restarting make_goal and movebase if this occurs. (Note: this may have been fixed by removing the check for orientation).

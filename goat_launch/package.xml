@@ -1,0 +1,34 @@
+<package format="2">
+    <name>goat_launch</name>
+    <version>0.2.0</version>
+    <description>Launchfiles for the GOAT.</description>
+    <maintainer email="gregjm@umich.edu">Gregory Meyer</maintainer>
+    <license>BSD 3-Clause License</license>
+
+    <url type="repository">https://github.com/umigv/goat_launch</url>
+    <author>Gregory Meyer</author>
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <exec_depend>cartographer_ros</exec_depend>
+    <exec_depend>cmd_vel_selector</exec_depend>
+    <exec_depend>encoder_odometry</exec_depend>
+    <exec_depend>gmapping</exec_depend>
+    <exec_depend>goat_description</exec_depend>
+    <exec_depend>imu_complementary_filter</exec_depend>
+    <exec_depend>imu_temporal_filter_node</exec_depend>
+    <exec_depend>joint_state_publisher</exec_depend>
+    <exec_depend>joy</exec_depend>
+    <exec_depend>make_goal</exec_depend>
+    <exec_depend>move_base</exec_depend>
+    <exec_depend>nmea_navsat_driver</exec_depend>
+    <exec_depend>obstacle_detector</exec_depend>
+    <exec_depend>phidgets_encoder</exec_depend>
+    <exec_depend>phidgets_imu</exec_depend>
+    <exec_depend>robot_localization</exec_depend>
+    <exec_depend>robot_state_publisher</exec_depend>
+    <exec_depend>rosserial_python</exec_depend>
+    <exec_depend>teleop_twist_joy</exec_depend>
+    <exec_depend>transform_imu</exec_depend>
+    <exec_depend>zed_wrapper</exec_depend>
+</package>

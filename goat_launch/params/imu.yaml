@@ -1,0 +1,22 @@
+phidgets_imu_node:
+    frame_id: imu_ned
+    period: 8.0
+    angular_velocity_stdev: 0.0102974425867665445
+    linear_acceleration_stdev: 0.02745862
+    magnetic_field_stdev: 0.00000012
+
+transform_imu_node:
+    frame_id: "imu"
+
+complementary_filter_node:
+    gain_acc: 0.01
+    gain_mag: 0.01
+    bias_alpha: 0.01
+    do_bias_estimation: true
+    do_adaptive_gain: true
+    use_mag: false
+    fixed_frame: "odom"
+    publish_tf: false
+    reverse_tf: false
+    constant_dt: 0.0
+    publish_debug_topics: false
