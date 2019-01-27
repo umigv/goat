@@ -1,0 +1,10 @@
+-Iinclude
+-isystemexternal/Catch2/single_include
+-pedantic
+-pipe
+-std=c++14
+-Wall
+-Wcast-qual
+-Wconversion
+-Wextra
+-Wshadow
