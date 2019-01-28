@@ -62,9 +62,9 @@ int main(int argc, char** argv) {
     lines.pop_back();
     };
 
-    std::transform(lines.cbegin(), lines.cend(), std::back_inserter(timers), [&nh, &callback](const TimeAndCmdVel &directive)) { 
+    std::transform(lines.cbegin(), lines.cend(), std::back_inserter(timers), [&nh, &callback](const TimeAndCmdVel &directive) { 
         return nh.createTimer(directive.time, callback, true);
-    };
+    });
 
     ros::spin();
 }
