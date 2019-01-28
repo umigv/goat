@@ -1,0 +1,124 @@
+#include "WhiteLineDetection.h"
+
+void DetectWhiteLines::initCamera()
+{
+   InitParameters initParameters;
+   initParameters.camera_resolution = RESOLUTION_HD720;
+   initParameters.depth_mode = DEPTH_MODE_PERFORMANCE;
+   initParameters.coordinate_system = COORDINATE_SYSTEM_IMAGE;
+   initParameters.coordinate_units = UNIT_METER;
+
+   ERROR_CODE err = zed.open(initParameters);
+   if(err != SUCCESS)
+   {
+     cerr << err << "\n";
+     zed.close();
+     exit(1);
+   }
+}
+
+bool DetectWhiteLines::loadPointCloud()
+{
+  ERROR_CODE erg = zed.grab();
+  if(erg == SUCCESS)
+  {
+    zed.retrieveMeasure(point_cloud,MEASURE_XYZRGBA);
+    return true;
+  }
+  return false;
+}
+
+
+double DetectWhiteLines::findMinX()
+{
+  sl::float4 currPoint;
+  double minX = MAX_X_VALUE;
+   for(int i = 0; i < HEIGHT; ++i)
+   {
+	point_cloud.getValue(i,0,&currPoint);
+	if(isValidPoint(currPoint.x,true))	
+	   minX = currPoint.x;
+   }
+   if(minX < 0) minX *= -1;
+   return minX;
+}
+
+
+bool DetectWhiteLines::isValidPoint(float & currVal, bool isX)
+{
+  if(isX)
+  {
+    return (!isnan(currVal) && !isinf(currVal) && currVal < MAX_X_VALUE && currVal > MIN_X_VALUE);
+  }
+  else
+  {
+    return (!isnan(currVal) && !isinf(currVal) && currVal < MAX_Z_VALUE && currVal > MAX_Z_VALUE);
+  }
+  
+}
+
+
+ void DetectWhiteLines::convertXZ(double & minX)
+ {
+   sl::float4 currPoint;
+   for(size_t i = 0; i < HEIGHT; ++i)
+   {
+      for(size_t j = 0; j < WIDTH; ++j)
+      {
+          size_t x,z;
+          int print;
+          if(isValidPoint(currPoint.x,true))
+          {
+	     x = static_cast<int>((currPoint.x + minX) / XDIVISOR);
+	     print++;
+          }
+          if(isValidPoint(currPoint.z,false))
+          {
+	     z = static_cast<int>(currPoint.z / ZDIVISOR);
+	     print++;
+          }
+
+	  if(print == 2)
+	  {
+	     Rgba color = unpack_float(currPoint.w);
+	     uchar r = uchar(color.r);
+	     uchar b = uchar(color.b);
+	     uchar g = uchar(color.g);
+
+	     cv::Vec3b val = xzMat.at<cv::Vec3b>(cv::Point(x,z));
+	     xzMat.at<cv::Vec3b>(cv::Point(x,z)) = {b,g,r};
+	  }
+	  print = 0;
+      }
+   }
+ }
+
+
+void DetectWhiteLines::whiteLineDetection()
+{
+      whiteLineDetect = xzMat;
+      cv::Size s = whiteLineDetect.size();
+      cv::Mat outputImage(s, CV_8UC3, cv::Scalar(0,0,0));
+      cv::cvtColor(whiteLineDetect,whiteLineDetect,CV_BGR2GRAY);
+      //cv::resize(whiteLineDetect,whiteLineDetect,cv::Size(134,200),cv::INTER_LANCZOS4);
+      cv::threshold(whiteLineDetect,whiteLineDetect,170,255,cv::THRESH_BINARY);
+      vector<cv::Vec4i> lines;
+      cv::HoughLinesP(whiteLineDetect,lines,1,CV_PI/180,20,10,1);
+      for( const auto& i : lines)
+	line(outputImage,cv::Point(i[0],i[1]),cv::Point(i[2],i[3]),cv::Scalar(255,255,255),2);
+      //cv::resize(outputImage,outputImage,s,cv::INTER_LANCZOS4);
+}
+
+ void DetectWhiteLines::operator()()
+{
+  cout << "WORKING\n";
+  /*
+  initCamera();
+  loadPointCloud();
+  double val = findMinX();
+  convertXZ(val);
+  //displayXZ(50);
+  whiteLineDetection();
+  //displayWL(50);
+*/
+}

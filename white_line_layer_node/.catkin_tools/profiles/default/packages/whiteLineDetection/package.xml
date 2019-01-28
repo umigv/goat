@@ -1,0 +1,12 @@
+<package format="2">
+ <name>whiteLineDetection</name>
+ <version>0.1.0</version>
+ <description>Detects white lines through a stereo camera</description>
+ <author>Matt Saraceno </author>
+ <license>BSD 3-Clause License</license>
+ <maintainer email="mattsara@umich.edu">Matt Saraceno</maintainer>
+ <buildtool_depend> catkin</buildtool_depend>
+ <depend>roscpp</depend>
+ <depend>image_transport</depend>
+ <depend>cv_bridge</depend>
+</package> 
