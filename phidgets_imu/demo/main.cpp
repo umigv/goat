@@ -34,12 +34,19 @@ struct OnAttach {
         spatial.data_interval() = spatial.min_data_interval();
 
         const std::unique_lock<std::mutex> lck{ cout_mtx };
-        std::cerr << "attached\n";
+        std::cout << "attached\n";
+    }
+};
+
+struct OnError {
+    void operator()(ph::Spatial, std::error_condition err) const {
+        const std::unique_lock<std::mutex> lck{ cout_mtx };
+        std::cerr << "\033[31merror: " << err.message() << "\n\033[0m";
     }
 };
 
 int main() {
-    ph::Spatial spatial{ OnData{ }, OnAttach{ } };
+    ph::Spatial spatial{ OnData{ }, OnAttach{ }, OnError{ } };
 
     std::signal(SIGTERM, terminate_handler);
 
