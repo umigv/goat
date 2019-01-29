@@ -4,6 +4,7 @@
 #include <atomic>
 #include <iostream>
 #include <mutex>
+#include <thread>
 
 std::atomic<bool> keep_running{ true };
 std::mutex cout_mtx;
@@ -12,39 +13,33 @@ void terminate_handler(int) {
     keep_running.store(false);
 }
 
-std::ostream& operator<<(std::ostream &os, const std::array<double, 3> &arr) {
-    return os << "{ " << arr[0] << ", " << arr[1] << ", " << arr[2] << " }";
+std::ostream& operator<<(std::ostream &os, const ph::spatial::Vector &vec) {
+    return os << "[" << vec.x << ", " << vec.y << ", " << vec.z << "]";
 }
 
-void on_data(const ph::Spatial&, const std::array<double, 3> &lin,
-             const std::array<double, 3> &ang, const std::array<double, 3> &mag,
-             double timestamp) {
-    const std::unique_lock<std::mutex> lck{ cout_mtx };
+struct OnData {
+    void operator()(ph::Spatial, const ph::spatial::Data &data) const {
+        const std::unique_lock<std::mutex> lck{ cout_mtx };
+        std::cout << "{\n"
+                  << "    \"timestamp\": " << data.timestamp.time_since_epoch().count() << ",\n"
+                  << "    \"linear_acceleration\": " << data.linear_acceleration << ",\n"
+                  << "    \"angular_velocity\": " << data.angular_velocity << ",\n"
+                  << "    \"magnetic_field\": " << data.magnetic_field << '\n'
+                  << "},\n";
+    }
+};
 
-    std::cout << "timestamp: " << timestamp << ", linear: " << lin
-        << ", angular: " << ang << ", magnetic: " << mag << '\n';
-}
+struct OnAttach {
+    void operator()(ph::Spatial spatial) const {
+        spatial.data_interval() = spatial.min_data_interval();
 
-void notify_attached(ph::Spatial spatial) {
-    const std::unique_lock<std::mutex> lck{ cout_mtx };
-
-    spatial.data_interval() = 100;
-
-    std::cout << "attached\n";
-}
-
-void notify_detached(ph::Spatial) {
-    const std::unique_lock<std::mutex> lck{ cout_mtx };
-
-    std::cout << "detached\n";
-}
+        const std::unique_lock<std::mutex> lck{ cout_mtx };
+        std::cerr << "attached\n";
+    }
+};
 
 int main() {
-    ph::Spatial spatial;
-
-    spatial.set_data_handler(on_data);
-    spatial.set_attach_handler({ notify_attached });
-    spatial.set_detach_handler({ notify_detached });
+    ph::Spatial spatial{ OnData{ }, OnAttach{ } };
 
     std::signal(SIGTERM, terminate_handler);
 
