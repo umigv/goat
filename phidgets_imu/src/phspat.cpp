@@ -1,23 +1,10 @@
 #include <phspat.h>
 
 #include <cassert>
-#include <functional>
-#include <mutex>
 #include <string>
-#include <system_error>
 #include <utility>
 
 namespace ph {
-
-static void expect(PhidgetReturnCode ret, const char *what) {
-    assert(what);
-
-    if (ret == EPHIDGET_OK) {
-        return;
-    }
-
-    throw std::system_error{ static_cast<int>(ret), phidget_category(), what };
-}
 
 class PhidgetCategory : public std::error_category {
 public:
@@ -29,7 +16,9 @@ public:
 
     std::string message(int condition) const override {
         const char *msg;
-        const auto ret = Phidget_getErrorDescription(static_cast<PhidgetReturnCode>(condition), &msg);
+        const auto ret{
+            Phidget_getErrorDescription(static_cast<PhidgetReturnCode>(condition), &msg)
+        };
 
         if (ret != EPHIDGET_OK) {
             std::abort();
@@ -45,20 +34,65 @@ const std::error_category& phidget_category() noexcept {
     return category;
 }
 
+spatial::DataIntervalReference Spatial::data_interval() noexcept {
+    return spatial::DataIntervalReference{ *this };
+}
+
+spatial::Clock::duration Spatial::data_interval() const {
+    return handle_ptr_->get_data_interval();
+}
+
+spatial::Clock::duration Spatial::min_data_interval() const {
+    return handle_ptr_->get_min_data_interval();
+}
+
+spatial::Clock::duration Spatial::max_data_interval() const {
+    return handle_ptr_->get_max_data_interval();
+}
+
+spatial::Clock Spatial::clock() const {
+    return spatial::Clock{ handle_ptr_ };
+}
+
+Spatial::Spatial(std::shared_ptr<spatial::HandleBase> handle_ptr) noexcept
+: handle_ptr_{ std::move(handle_ptr) } {
+    assert(handle_ptr_);
+}
+
 namespace spatial {
 
-class Handle : public std::enable_shared_from_this<Handle> {
-public:
-    using AttachHandler = Spatial::AttachHandler;
-    using DetachHandler = Spatial::DetachHandler;
-    using DataHandler = Spatial::DataHandler;
+static void expect(PhidgetReturnCode ret, const char *what) {
+    assert(what);
 
-    Handle(const spatial::Config &config) {
-        const auto expect = [](PhidgetReturnCode ret) {
-            ph::expect(ret, "ph::spatial::Handle::Handle()");
-        };
+    if (ret == EPHIDGET_OK) {
+        return;
+    }
 
-        expect(PhidgetSpatial_create(&base_));
+    throw std::system_error{ static_cast<int>(ret), phidget_category(), what };
+}
+
+Clock::time_point Clock::now() const {
+    return handle_ptr_->get_timestamp();
+}
+
+Clock::Clock(std::shared_ptr<HandleBase> handle_ptr) noexcept
+: handle_ptr_{ std::move(handle_ptr) } { }
+
+static void on_detach(PhidgetHandle, void *handle_v) {
+    HandleBase &handle{ *static_cast<HandleBase*>(handle_v) };
+    handle.close_accelerometer();
+}
+
+HandleBase::HandleBase(const spatial::Config &config,
+                       PhidgetSpatial_OnSpatialDataCallback on_data,
+                       Phidget_OnAttachCallback on_attach) {
+    const auto expect = [](PhidgetReturnCode ret) {
+        ph::spatial::expect(ret, "ph::spatial::HandleBase::HandleBase()");
+    };
+
+    expect(PhidgetSpatial_create(&spatial_));
+
+    try {
         expect(Phidget_setChannel(as_phidget(), config.channel));
         expect(Phidget_setDeviceSerialNumber(as_phidget(), config.serial_number));
 
@@ -68,184 +102,136 @@ public:
             expect(Phidget_setDeviceLabel(as_phidget(), PHIDGET_LABEL_ANY));
         }
 
-        expect(Phidget_setOnAttachHandler(as_phidget(), &Handle::handle_attach, this));
-        expect(Phidget_setOnDetachHandler(as_phidget(), &Handle::handle_detach, this));
-        expect(PhidgetSpatial_setOnSpatialDataHandler(base_, &Handle::handle_data, this));
+        expect(PhidgetSpatial_setOnSpatialDataHandler(spatial_, on_data, this));
+        expect(Phidget_setOnAttachHandler(as_phidget(), on_attach, this));
+        expect(Phidget_setOnDetachHandler(as_phidget(), on_detach, this));
 
-        expect(Phidget_open(as_phidget()));
+        expect(PhidgetAccelerometer_create(&accelerometer_));
+    } catch (...) {
+        expect(PhidgetSpatial_delete(&spatial_));
+
+        throw;
     }
-
-    ~Handle() {
-        const auto expect = [](PhidgetReturnCode ret) {
-            ph::expect(ret, "ph::spatial::Handle::~Handle()");
-        };
-
-        expect(Phidget_close(as_phidget()));
-        expect(PhidgetSpatial_delete(&base_));
-    }
-
-    void set_attach_handler(std::function<AttachHandler> f) {
-        const std::lock_guard<std::recursive_mutex> lck{ mtx_ };
-
-        attach_handler_ = std::move(f);
-    }
-
-    void set_detach_handler(std::function<DetachHandler> f) {
-        const std::lock_guard<std::recursive_mutex> lck{ mtx_ };
-
-        detach_handler_ = std::move(f);
-    }
-
-    void set_data_handler(std::function<DataHandler> f) {
-        const std::lock_guard<std::recursive_mutex> lck{ mtx_ };
-
-        data_handler_ = std::move(f);
-    }
-
-    std::uint32_t get_min_data_interval() const {
-        const std::lock_guard<std::recursive_mutex> lck{ mtx_ };
-
-        std::uint32_t min_data_interval;
-        expect(PhidgetSpatial_getMinDataInterval(base_, &min_data_interval),
-               "ph::spatial::Handle::get_min_data_interval");
-
-        return min_data_interval;
-    }
-
-    std::uint32_t get_max_data_interval() const {
-        const std::lock_guard<std::recursive_mutex> lck{ mtx_ };
-
-        std::uint32_t max_data_interval;
-        expect(PhidgetSpatial_getMaxDataInterval(base_, &max_data_interval),
-               "ph::spatial::Handle::get_max_data_interval");
-
-        return max_data_interval;
-    }
-
-    std::uint32_t get_data_interval() const {
-        const std::lock_guard<std::recursive_mutex> lck{ mtx_ };
-
-        std::uint32_t data_interval;
-        expect(PhidgetSpatial_getDataInterval(base_, &data_interval),
-               "ph::spatial::Handle::get_data_interval");
-
-        return data_interval;
-    }
-
-    void set_data_interval(std::uint32_t data_interval) {
-        const std::lock_guard<std::recursive_mutex> lck{ mtx_ };
-
-        expect(PhidgetSpatial_setDataInterval(base_, data_interval),
-               "ph::spatial::Handle::set_data_interval");
-    }
-
-private:
-    static void handle_attach(PhidgetHandle, void *handle_v) {
-        auto &handle{ *static_cast<Handle*>(handle_v) };
-
-        const std::lock_guard<std::recursive_mutex> lck{ handle.mtx_ };
-
-        if (handle.attach_handler_) {
-            Spatial spatial{ handle.shared_from_this() };
-            handle.attach_handler_(spatial);
-        }
-    }
-
-    static void handle_detach(PhidgetHandle, void *handle_v) {
-        auto &handle{ *static_cast<Handle*>(handle_v) };
-
-        const std::lock_guard<std::recursive_mutex> lck{ handle.mtx_ };
-
-        if (handle.detach_handler_) {
-            Spatial spatial{ handle.shared_from_this() };
-            handle.detach_handler_(spatial);
-        }
-    }
-
-    static void handle_data(PhidgetSpatialHandle, void *handle_v, const double acceleration[3],
-                            const double angular_rate[3], const double magnetic_field[3],
-                            double timestamp) {
-        constexpr double MS2_PER_G{ 9.80665 };
-        constexpr double RADS_PER_DEG{ 0.017453292519943295769 };
-        constexpr double TESLA_PER_GAUSS{ 1.0e-4 };
-
-        auto &handle{ *static_cast<Handle*>(handle_v) };
-
-        const std::lock_guard<std::recursive_mutex> lck{ handle.mtx_ };
-
-        // imu coordinate frame is NED by default - transform to ENU
-        // ready for use with ROS - follows REP 103, REP 145, robot_localization standards
-        // also transform units to metric standard
-        if (handle.data_handler_) {
-            const std::array<double, 3> linear{ -MS2_PER_G * acceleration[1],
-                                                -MS2_PER_G * acceleration[0],
-                                                MS2_PER_G * acceleration[2] };
-            const std::array<double, 3> angular{ -RADS_PER_DEG * angular_rate[1],
-                                                 -RADS_PER_DEG * angular_rate[0],
-                                                 RADS_PER_DEG * angular_rate[2] };
-            const std::array<double, 3> magnetic{ -TESLA_PER_GAUSS * magnetic_field[1],
-                                                  -TESLA_PER_GAUSS * magnetic_field[0],
-                                                  TESLA_PER_GAUSS * magnetic_field[2] };
-
-            Spatial spatial{ handle.shared_from_this() };
-            handle.data_handler_(spatial, linear, angular, magnetic, timestamp);
-        }
-    }
-
-    PhidgetHandle as_phidget() const noexcept {
-        return reinterpret_cast<PhidgetHandle>(base_);
-    }
-
-    PhidgetSpatialHandle base_;
-    std::function<AttachHandler> attach_handler_;
-    std::function<DetachHandler> detach_handler_;
-    std::function<DataHandler> data_handler_;
-    mutable std::recursive_mutex mtx_;
-};
-
-} // namespace spatial
-
-Spatial::Spatial() : Spatial{ spatial::Config{ } } { }
-
-Spatial::Spatial(const spatial::Config &config)
-: Spatial{ std::make_unique<spatial::Handle>(config) } { }
-
-spatial::DataIntervalReference Spatial::data_interval() noexcept {
-    return spatial::DataIntervalReference{ *this };
 }
 
-std::uint32_t Spatial::data_interval() const {
-    return handle_ptr_->get_data_interval();
+HandleBase::~HandleBase() {
+    const auto expect = [](PhidgetReturnCode ret) {
+        ph::spatial::expect(ret, "ph::spatial::HandleBase::~HandleBase()");
+    };
+
+    Phidget_close(accel_as_phidget()); // may not be open
+    expect(PhidgetAccelerometer_delete(&accelerometer_));
+
+    Phidget_close(as_phidget()); // may not be open
+    expect(PhidgetSpatial_delete(&spatial_));
 }
 
-std::uint32_t Spatial::min_data_interval() const {
-    return handle_ptr_->get_min_data_interval();
+void HandleBase::open() {
+    expect(Phidget_openWaitForAttachment(as_phidget(), PHIDGET_TIMEOUT_INFINITE),
+           "ph::spatial::HandleBase::open");
+    // attachment will call open_accelerometer
 }
 
-std::uint32_t Spatial::max_data_interval() const {
-    return handle_ptr_->get_max_data_interval();
+void HandleBase::open_accelerometer() {
+    const auto expect = [](PhidgetReturnCode ret) {
+        ph::spatial::expect(ret, "ph::spatial::HandleBase::open_accelerometer");
+    };
+
+    const std::unique_lock<std::mutex> lck{ mtx_ };
+
+    int channel;
+    expect(Phidget_getChannel(as_phidget(), &channel));
+
+    expect(Phidget_setChannel(accel_as_phidget(), channel));
+    expect(Phidget_openWaitForAttachment(accel_as_phidget(), PHIDGET_TIMEOUT_INFINITE));
 }
 
-void Spatial::set_attach_handler(std::function<AttachHandler> f) {
-    handle_ptr_->set_attach_handler(std::move(f));
+void HandleBase::close_accelerometer() {
+    const std::unique_lock<std::mutex> lck{ mtx_ };
+
+    expect(Phidget_close(accel_as_phidget()), "ph::spatial::HandleBase::close_accelerometer");
 }
 
-void Spatial::set_detach_handler(std::function<DetachHandler> f) {
-    handle_ptr_->set_detach_handler(std::move(f));
+Clock::duration HandleBase::get_min_data_interval() const {
+    const std::lock_guard<std::mutex> lck{ mtx_ };
+
+    std::uint32_t min_data_interval;
+    expect(PhidgetSpatial_getMinDataInterval(spatial_, &min_data_interval),
+           "ph::spatial::HandleBase::get_min_data_interval");
+
+    return Clock::duration{ min_data_interval };
 }
 
-void Spatial::set_data_handler(std::function<DataHandler> f) {
-    handle_ptr_->set_data_handler(std::move(f));
+Clock::duration HandleBase::get_max_data_interval() const {
+    const std::lock_guard<std::mutex> lck{ mtx_ };
+
+    std::uint32_t max_data_interval;
+    expect(PhidgetSpatial_getMaxDataInterval(spatial_, &max_data_interval),
+           "ph::spatial::HandleBase::get_max_data_interval");
+
+    return Clock::duration{ max_data_interval };
 }
 
-Spatial::Spatial(std::shared_ptr<spatial::Handle> handle_ptr) noexcept
-: handle_ptr_{ std::move(handle_ptr) } {
-    assert(handle_ptr_);
+Clock::duration HandleBase::get_data_interval() const {
+    const std::lock_guard<std::mutex> lck{ mtx_ };
+
+    std::uint32_t data_interval;
+    expect(PhidgetSpatial_getDataInterval(spatial_, &data_interval),
+           "ph::spatial::HandleBase::get_data_interval");
+
+    return Clock::duration{ data_interval };;
 }
 
-namespace spatial {
+void HandleBase::set_data_interval(Clock::duration data_interval) {
+    const std::lock_guard<std::mutex> lck{ mtx_ };
 
-DataIntervalReference& DataIntervalReference::operator=(std::uint32_t data_interval) {
+    expect(PhidgetSpatial_setDataInterval(spatial_, data_interval.count()),
+           "ph::spatial::HandleBase::set_data_interval");
+}
+
+Clock::time_point HandleBase::get_timestamp() const {
+    const std::lock_guard<std::mutex> lck{ mtx_ };
+
+    double timestamp_ms;
+    expect(PhidgetAccelerometer_getTimestamp(accelerometer_, &timestamp_ms),
+           "ph::spatial::HandleBase::get_timestamp");
+    const std::chrono::duration<double, std::milli> timestamp{ timestamp_ms };
+
+    return Clock::time_point{ std::chrono::duration_cast<Clock::duration>(timestamp) };
+}
+
+PhidgetHandle HandleBase::as_phidget() const noexcept {
+    return reinterpret_cast<PhidgetHandle>(spatial_);
+}
+
+PhidgetHandle HandleBase::accel_as_phidget() const noexcept {
+    return reinterpret_cast<PhidgetHandle>(accelerometer_);
+}
+
+Data make_data(const double lin[3], const double ang[3],
+               const double mag[3], double stamp) noexcept {
+    constexpr double MS2_PER_G{ 9.80665 };
+    constexpr double RADS_PER_DEG{ 0.017453292519943295769 };
+    constexpr double TESLA_PER_GAUSS{ 1.0e-4 };
+
+    Data data;
+    data.linear_acceleration = Vector{ -MS2_PER_G * lin[1],
+                                       -MS2_PER_G * lin[0],
+                                       MS2_PER_G * lin[2] };
+    data.angular_velocity = Vector{ RADS_PER_DEG * ang[1],
+                                    RADS_PER_DEG * ang[0],
+                                    -RADS_PER_DEG * ang[2] };
+    data.magnetic_field = Vector{ TESLA_PER_GAUSS * mag[1],
+                                  TESLA_PER_GAUSS * mag[0],
+                                  -TESLA_PER_GAUSS * mag[2] };
+
+    const std::chrono::duration<double, std::milli> since_epoch{ stamp };
+    data.timestamp = Clock::time_point{ std::chrono::duration_cast<Clock::duration>(since_epoch) };
+
+    return data;
+}
+
+DataIntervalReference& DataIntervalReference::operator=(Clock::duration data_interval) {
     spatial_.handle_ptr_->set_data_interval(data_interval);
 
     return *this;
@@ -261,7 +247,7 @@ DataIntervalReference& DataIntervalReference::operator=(
     return *this;
 }
 
-DataIntervalReference::operator std::uint32_t() const {
+DataIntervalReference::operator Clock::duration() const {
     return spatial_.handle_ptr_->get_data_interval();
 }
 
