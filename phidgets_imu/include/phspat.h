@@ -26,7 +26,7 @@ struct Config {
 
 class HandleBase;
 
-template <typename OnData, typename OnAttach>
+template <typename OnData, typename OnAttach, typename OnError>
 class Handle;
 
 class Clock {
@@ -67,16 +67,17 @@ class Spatial {
 public:
     friend spatial::DataIntervalReference;
 
-    template <typename OnData, typename OnAttach>
+    template <typename OnData, typename OnAttach, typename OnError>
     friend class spatial::Handle;
 
     Spatial();
 
-    template <typename OnData, typename OnAttach>
-    Spatial(const OnData &on_data, const OnAttach &on_attach);
+    template <typename OnData, typename OnAttach, typename OnError>
+    Spatial(const OnData &on_data, const OnAttach &on_attach, const OnError &on_error);
 
-    template <typename OnData, typename OnAttach>
-    Spatial(const spatial::Config &config, const OnData &on_data, const OnAttach &on_attach);
+    template <typename OnData, typename OnAttach, typename OnError>
+    Spatial(const spatial::Config &config, const OnData &on_data,
+            const OnAttach &on_attach, const OnError &on_error);
 
     Spatial(const Spatial &other) = default;
 
@@ -104,6 +105,8 @@ private:
 
 const std::error_category& phidget_category() noexcept;
 
+const std::error_category& phidget_error_event_category(const char *description);
+
 namespace spatial {
 
 class DataIntervalReference {
@@ -127,7 +130,7 @@ private:
 class HandleBase : public std::enable_shared_from_this<HandleBase> {
 public:
     HandleBase(const spatial::Config &config, PhidgetSpatial_OnSpatialDataCallback on_data,
-               Phidget_OnAttachCallback on_attach);
+               Phidget_OnAttachCallback on_attach, Phidget_OnErrorCallback on_error);
 
     virtual ~HandleBase();
 
@@ -164,12 +167,13 @@ private:
 Data make_data(const double lin[3], const double ang[3],
                const double mag[3], double time) noexcept;
 
-template <typename OnData, typename OnAttach>
+template <typename OnData, typename OnAttach, typename OnError>
 class Handle : public HandleBase {
 public:
-    Handle(const Config &config, const OnData &on_data, const OnAttach &on_attach)
-    : HandleBase{ config, &Handle::on_data, &Handle::on_attach }, on_data_{ on_data },
-      on_attach_{ on_attach } { }
+    Handle(const Config &config, const OnData &on_data,
+           const OnAttach &on_attach, const OnError &on_error)
+    : HandleBase{ config, &Handle::on_data, &Handle::on_attach, &Handle::on_error },
+      on_data_{ on_data }, on_attach_{ on_attach }, on_error_{ on_error } { }
 
     virtual ~Handle() = default;
 
@@ -193,19 +197,32 @@ private:
         handle.on_attach_(spatial);
     }
 
+    static void on_error(PhidgetHandle, void *handle_ptr_v, Phidget_ErrorEventCode code,
+                         const char *description) {
+        auto &handle{ *static_cast<Handle*>(handle_ptr_v) };
+        Spatial spatial{ handle.shared_from_this() };
+        std::error_condition condition{ code, phidget_error_event_category(description) };
+
+        handle.on_error_(spatial, condition);
+    }
+
     const OnData on_data_{ };
     const OnAttach on_attach_{ };
+    const OnError on_error_{ };
 };
 
 } // namespace spatial
 
-template <typename OnData, typename OnAttach>
-Spatial::Spatial(const OnData &on_data, const OnAttach &on_attach)
-: Spatial{ spatial::Config{ }, on_data, on_attach } { }
+template <typename OnData, typename OnAttach, typename OnError>
+Spatial::Spatial(const OnData &on_data, const OnAttach &on_attach, const OnError &on_error)
+: Spatial{ spatial::Config{ }, on_data, on_attach, on_error } { }
 
-template <typename OnData, typename OnAttach>
-Spatial::Spatial(const spatial::Config &config, const OnData &on_data, const OnAttach &on_attach)
-: handle_ptr_{ std::make_shared<spatial::Handle<OnData, OnAttach>>(config, on_data, on_attach) } {
+template <typename OnData, typename OnAttach, typename OnError>
+Spatial::Spatial(const spatial::Config &config, const OnData &on_data,
+                 const OnAttach &on_attach, const OnError &on_error)
+: handle_ptr_{ std::make_shared<spatial::Handle<OnData, OnAttach, OnError>>(
+    config, on_data, on_attach, on_error
+) } {
     handle_ptr_->open();
 }
 

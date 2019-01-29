@@ -1,37 +1,50 @@
 #include <phspat.h>
 
+#include "err.h"
+
 #include <cassert>
 #include <string>
 #include <utility>
+#include <set>
 
 namespace ph {
 
-class PhidgetCategory : public std::error_category {
-public:
-    virtual ~PhidgetCategory() = default;
+const std::error_category& phidget_category() noexcept {
+    return PhidgetCategory::instance();
+}
 
-    const char* name() const noexcept override {
-        return "ph::PhidgetCategory";
+struct EventCompare {
+    using is_transparent = std::true_type;
+
+    constexpr bool operator()(const PhidgetErrorEventCategory &lhs,
+                              const PhidgetErrorEventCategory &rhs) const noexcept {
+        return lhs.compare(rhs) < 0;
     }
 
-    std::string message(int condition) const override {
-        const char *msg;
-        const auto ret{
-            Phidget_getErrorDescription(static_cast<PhidgetReturnCode>(condition), &msg)
-        };
+    constexpr bool operator()(const PhidgetErrorEventCategory &lhs,
+                              const char *rhs) const noexcept {
+        return lhs.compare(rhs) < 0;
+    }
 
-        if (ret != EPHIDGET_OK) {
-            std::abort();
-        }
-
-        return { msg };
+    constexpr bool operator()(const char *lhs,
+                              const PhidgetErrorEventCategory &rhs) const noexcept {
+        return rhs.compare(lhs) > 0;
     }
 };
 
-const std::error_category& phidget_category() noexcept {
-    static const PhidgetCategory category;
+const std::error_category& phidget_error_event_category(const char *description) {
+    static std::mutex categories_mtx;
+    static std::set<PhidgetErrorEventCategory, EventCompare> categories;
 
-    return category;
+    const std::lock_guard<std::mutex> lck{ categories_mtx };
+
+    const auto category_iter = categories.lower_bound(description);
+
+    if (category_iter == categories.end() || category_iter->compare(description) != 0) {
+        return *categories.emplace_hint(category_iter, description);
+    }
+
+    return *category_iter;
 }
 
 spatial::DataIntervalReference Spatial::data_interval() noexcept {
@@ -85,7 +98,7 @@ static void on_detach(PhidgetHandle, void *handle_v) {
 
 HandleBase::HandleBase(const spatial::Config &config,
                        PhidgetSpatial_OnSpatialDataCallback on_data,
-                       Phidget_OnAttachCallback on_attach) {
+                       Phidget_OnAttachCallback on_attach, Phidget_OnErrorCallback on_error) {
     const auto expect = [](PhidgetReturnCode ret) {
         ph::spatial::expect(ret, "ph::spatial::HandleBase::HandleBase()");
     };
@@ -105,6 +118,7 @@ HandleBase::HandleBase(const spatial::Config &config,
         expect(PhidgetSpatial_setOnSpatialDataHandler(spatial_, on_data, this));
         expect(Phidget_setOnAttachHandler(as_phidget(), on_attach, this));
         expect(Phidget_setOnDetachHandler(as_phidget(), on_detach, this));
+        expect(Phidget_setOnErrorHandler(as_phidget(), on_error, this));
 
         expect(PhidgetAccelerometer_create(&accelerometer_));
     } catch (...) {

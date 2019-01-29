@@ -12,12 +12,14 @@ find_package(Boost 1.56 REQUIRED)
 
 find_library(PHIDGET22_LIB phidget22)
 
-add_library(phspat_shared SHARED src/phspat.cpp)
+set(SOURCES src/phspat.cpp src/err.cpp)
+
+add_library(phspat_shared SHARED ${SOURCES})
 set_target_properties(phspat_shared PROPERTIES PUBLIC_HEADER "phspat.h"
                                                OUTPUT_NAME phspat)
 target_link_libraries(phspat_shared ${PHIDGET22_LIB})
 
-add_library(phspat_static STATIC src/phspat.cpp)
+add_library(phspat_static STATIC ${SOURCES})
 set_target_properties(phspat_static PROPERTIES PUBLIC_HEADER "phspat.h"
                                                OUTPUT_NAME phspat)
 target_link_libraries(phspat_static ${PHIDGET22_LIB})
