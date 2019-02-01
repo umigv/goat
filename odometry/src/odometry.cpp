@@ -8,7 +8,7 @@ int main(int argc, char** argv) {
     ros::init(argc, argv, "odometry");
     ros::nodeHandle nh("~");
     ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("filtered", 1000);
-    ros::Service::waitForService("gazebo/get_model_state", -1)
+    ros::Service::waitForService("gazebo/get_model_state", -1) // timeout?
     ros::ServiceClient client = nh.ServiceClient<gazebo_msgs::ModelState>("gazebo/get_model_state")
     
     gazebo_msgs::ModelState model = GetModelState::GetModelStateRequest()
@@ -18,7 +18,11 @@ int main(int argc, char** argv) {
     while(nh.ok()) {
         srv_model = client.call(model);
         if(model.success) {
+            nav_msgs::Odometry odom(); //ctors?
+            odom.pose.pose = model.Pose;
+            odom.twist.twist = model.twist;
             
         }
+        // exception handling?
     }
 }
