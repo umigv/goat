@@ -5,7 +5,6 @@
 #include <fstream>
 #include <sstream>
 
-
 struct TimeAndCmdVel{
     ros::Duration time;
     geometry_msgs::Twist cmd_vel;
@@ -42,7 +41,7 @@ int main(int argc, char** argv) {
     ros::Publisher pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
 
     std::string filename;
-    if (!nh.getParam("filename", filename)) {
+    if (!nh.getParam("param", filename)) {
         ROS_FATAL_STREAM("Missing Parameter: Filename");
         return 1;
     }
@@ -57,10 +56,14 @@ int main(int argc, char** argv) {
     std::vector<TimeAndCmdVel> lines(std::istream_iterator<TimeAndCmdVel>(file), {});
     std::vector<ros::Timer> timers;
 
-    auto callback = [&pub, &lines](auto) {
-    pub.publish(lines.back().cmd_vel);
-    lines.pop_back();
+    auto callback = [&pub, &lines](auto &&event_info) {
+    	pub.publish(lines.back().cmd_vel);
+    	lines.pop_back();
     };
+
+	while (!ros::Time::isValid()) {
+		ros::spinOnce();
+	}
 
     std::transform(lines.cbegin(), lines.cend(), std::back_inserter(timers), [&nh, &callback](const TimeAndCmdVel &directive) { 
         return nh.createTimer(directive.time, callback, true);
