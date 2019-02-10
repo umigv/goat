@@ -6,8 +6,8 @@
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "odometry");
-    ros::NodeHandle nh("~");
-    ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("filtered", 1000);
+    ros::NodeHandle nh;
+    ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odometry/filtered", 1000);
     ros::service::waitForService("gazebo/get_model_state", -1); // timeout?
     ros::ServiceClient client = nh.serviceClient<gazebo_msgs::GetModelState>("gazebo/get_model_state");
     if(!client.isValid()){
@@ -28,12 +28,12 @@ int main(int argc, char** argv) {
 
                 pub.publish(odom);
             }
-            else {
+            else { // model_rep.success
                 ROS_ERROR("Call succeded, but returned failed response");
                 exit(1);
             }
         }
-        else{
+        else{ // client.call(model_req, model_rep)
             ROS_ERROR("Call failed");
             exit(1);
         }
