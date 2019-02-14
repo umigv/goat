@@ -2,14 +2,15 @@
 #include <cstdlib>
 #include <sl/Camera.hpp>
 #include <opencv2/opencv.hpp>
-#include "std_msgs/String.h"
+#include <sensor_msgs/Imu.h>
 #include "ros/ros.h"
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
-//#include <tf2_ros/transform_listener.h>
-//#include <geometry_msgs/TransformStamped.h>
-//#include <geometry_msgs/Twist.h>
-//#include <geometry_msgs/Quaternion>
+#include <tf2_ros/transform_listener.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2/LinearMath/Transform.h>
+
+
 
 using namespace std;
 using namespace sl;
@@ -26,6 +27,8 @@ public:
     pub = it.advertise("WhiteLineDetection",1);
   }
 
+  ~DetectWhiteLines(){zed.close();}
+
   bool initCamera();
   bool loadPointCloud();
   double findMinX();
@@ -36,7 +39,7 @@ public:
 
   DetectWhiteLines(const DetectWhiteLines & other);
   
-  void imuTransform(const std_msgs::String::ConstPtr& msg);
+  void imuTransform(const sensor_msgs::ImuConstPtr &imu);
   void detect(const ros::TimerEvent&);
   
   void displayXZ(int time)
@@ -55,6 +58,8 @@ public:
      xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
      cout << "CLEARED\n";
   }
+
+  void transformIMU(int & x, int & z);
   
 private:
   const int MAX_X_VALUE = 12;
@@ -69,8 +74,6 @@ private:
 
   InitParameters initParameters;
 
-  int argc;
-  char ** argv;
   Camera zed;
   sl::Mat point_cloud;
   cv::Mat xzMat;
@@ -78,7 +81,9 @@ private:
   cv::Mat outputImage;
   image_transport::Publisher pub;
   image_transport::ImageTransport it;
-
+  sensor_msgs::Imu imu_val;
+  tf2::Quaternion quat;
+  
   ros::NodeHandle node;
   
   struct Rgba {
@@ -99,5 +104,5 @@ private:
     return pair.rgba;
   }
 
-  bool isValidPoint(float & currVal, bool isX);
+  bool isValidPoint(float  currVal, bool isX);
 };

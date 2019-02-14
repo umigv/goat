@@ -10,7 +10,7 @@ find_package(CUDA 9 REQUIRED)
 find_package(ZED 2.7 REQUIRED)
 find_package(OpenCV 3 REQUIRED)
 
-find_package(catkin REQUIRED COMPONENTS roscpp image_transport cv_bridge )
+find_package(catkin REQUIRED COMPONENTS roscpp image_transport cv_bridge tf2)
 
 catkin_package(CATKIN_DEPENDS roscpp)
 
@@ -19,4 +19,9 @@ include_directories(include ${catkin_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${ZED_IN
 
 add_executable(whiteLineDetection src/main.cpp src/WhiteLineDetection.cpp)
 target_link_libraries(whiteLineDetection ${catkin_LIBRARIES} ${CUDA_LIBRARIES} ${ZED_LIBRARIES}
-                                          ${OpenCV_LIBRARIES}) 
+                                          ${OpenCV_LIBRARIES})
+
+
+
+
+ 
