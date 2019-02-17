@@ -11,10 +11,6 @@ struct TimeAndCmdVel{
     geometry_msgs::Twist cmd_vel;
 };
 
-/*bool compareByLength(const  TimeAndCmdVel &t1, const TimeAndCmdVel &t2) {
-    		return t1.time > t2.time;
-}*/
-
 std::istream& operator >> (std::istream& is, TimeAndCmdVel& line)
 {
     std::string unparsedLine;
@@ -49,9 +45,11 @@ int main(int argc, char** argv) {
 	}
 
     std::string filename;
-    if (!nh.getParam("param", filename)) {
-        ROS_FATAL_STREAM("Missing Parameter: Filename");
-        return 1;
+    if (!nh.getParam("filename", filename)) {
+        ROS_FATAL_STREAM("Missing Parameter: filename");
+        ros::shutdown();
+		ros::waitForShutdown();
+		return 1;
     }
 
     std::ifstream file(filename);
@@ -65,26 +63,24 @@ int main(int argc, char** argv) {
     std::vector<ros::Timer> timers;
 	timers.reserve(lines.size());
 
-	bool lines_sorted;
-	for(int i = 0; i < (lines.size() - 1); ++i) {
-		if(!(lines.at(i + 1).time > lines.at(i).time)) {
-			ROS_WARN_STREAM("Commands in the Input file should be in time-increasing order, resolved internally");
-			lines_sorted = false;
-			break;
-		}
-	}
-
 
 	while (!ros::Time::isValid()) {
-		std::cout << "spin once" << std::endl;
 		ros::spinOnce();
 		
 	}
 
-	for (const TimeAndCmdVel &directive : lines) {
-		timers.push_back(nh.createTimer(directive.time, [cmd_vel = directive.cmd_vel, &pub](const ros::TimerEvent&) {
+	std::transform(lines.cbegin(), lines.cend(), std::back_inserter(timers), [&nh, &pub](const TimeAndCmdVel &directive) {
+		
+		auto callback = [cmd_vel = directive.cmd_vel, &pub](const ros::TimerEvent& event) {
 			pub.publish(cmd_vel);			
-		}, true));
+		};
+        return nh.createTimer(directive.time, callback, true);
+    });
+
+
+	if(!std::is_sorted(timers.begin(), timers.end())) {
+
+		ROS_WARN_STREAM("Commands in the Input file should be in time-increasing order, resolved internally");
 	}
 
     ros::spin();
