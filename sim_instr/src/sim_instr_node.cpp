@@ -82,6 +82,6 @@ int main(int argc, char** argv) {
 
 		ROS_WARN_STREAM("Commands in the Input file should be in time-increasing order, resolved internally");
 	}
-
+	
     ros::spin();
 }
