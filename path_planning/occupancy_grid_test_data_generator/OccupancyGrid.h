@@ -1,4 +1,3 @@
-//
 //  OccupanyGrid.h
 //  image_convert
 //
@@ -10,6 +9,11 @@
 class OccupancyGridInfo
 {
 public:
+    OccupancyGridInfo():
+    resolution(0), width(0), height(0)
+    {
+    }
+    
     OccupancyGridInfo(unsigned int w, unsigned int h):
     resolution(0), width(w), height(h)
     {
@@ -20,10 +24,12 @@ public:
     {
         probabilities[i] = item;
     }
+    
+    OccupancyGridInfo fill_probabilities(int argc, char** argv);
 
 private:
 
-    // all the data we can get directly from the image
+    // all the data we can get directly from the image itself
     float resolution;
     unsigned int width;
     unsigned int height;
