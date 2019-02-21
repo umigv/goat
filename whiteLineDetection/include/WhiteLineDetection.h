@@ -9,6 +9,8 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Transform.h>
+#include <nav_msgs/OccupancyGrid.h>
+#include <tf2_ros/buffer.h>
 
 
 
@@ -18,13 +20,13 @@ using namespace sl;
 class DetectWhiteLines{
 
 public:
- DetectWhiteLines(const ros::NodeHandle n) : it{n}
+  DetectWhiteLines(const ros::NodeHandle n)
   {
     node = n;
     xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
-    outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
-    whiteLineDetect =  cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
-    pub = it.advertise("WhiteLineDetection",1);
+    outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0));
+    occ_pub = node.advertise<nav_msgs::OccupancyGrid>("nav_msgs/OccupancyGrid", 50);
+    seqId = 0;
   }
 
   ~DetectWhiteLines(){zed.close();}
@@ -41,6 +43,7 @@ public:
   
   void imuTransform(const sensor_msgs::ImuConstPtr &imu);
   void detect(const ros::TimerEvent&);
+  void createBodyFrame(geometry_msgs::TransformStamped transform );
   
   void displayXZ(int time)
   {
@@ -59,7 +62,9 @@ public:
      cout << "CLEARED\n";
   }
 
+  
   void transformIMU(int & x, int & z);
+
   
 private:
   const int MAX_X_VALUE = 12;
@@ -75,16 +80,15 @@ private:
   InitParameters initParameters;
 
   Camera zed;
+  ros::NodeHandle node;
   sl::Mat point_cloud;
   cv::Mat xzMat;
-  cv::Mat whiteLineDetect;
   cv::Mat outputImage;
-  image_transport::Publisher pub;
-  image_transport::ImageTransport it;
   sensor_msgs::Imu imu_val;
   tf2::Quaternion quat;
-  
-  ros::NodeHandle node;
+  ros::Publisher occ_pub;
+  geometry_msgs::TransformStamped bodyFrame;
+  int seqId;
   
   struct Rgba {
    std::uint8_t r;
@@ -105,4 +109,6 @@ private:
   }
 
   bool isValidPoint(float  currVal, bool isX);
+  void publish();
+
 };

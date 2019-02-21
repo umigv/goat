@@ -56,11 +56,15 @@ bool DetectWhiteLines::isValidPoint(float currVal, bool isX)
 }
 
 
+void DetectWhiteLines::createBodyFrame(geometry_msgs::TransformStamped  transform )
+{
+  bodyFrame = transform;
+  cout << bodyFrame.transform.translation.x << endl;
+}
 
 
 void DetectWhiteLines::convertXZ()
 {
-   cout << quat.getAngle() << endl;
    sl::float4 currPoint;
    tf2::Vector3  xyz;
    for(size_t i = 0; i < HEIGHT; ++i)
@@ -74,8 +78,6 @@ void DetectWhiteLines::convertXZ()
 	  tf2::Transform transform(quat);
 	
 	  tf2::Vector3 result = transform * xyz;
-//	  cout <<"ORIG " << xyz[0] << " " << xyz[2] <<  " TRANSFORM " << result[0] << " " << result[2] << endl;
-	  if(i == 100 && j ==200) cout <<"ORIG " << xyz[0] << " " << xyz[2] <<  " TRANSFORM " << result[0] << " " << result[2] << endl;
 	  xyz = transform * xyz;
 	  
           int print = 0;
@@ -94,11 +96,6 @@ void DetectWhiteLines::convertXZ()
 	  
 	  if(print == 2)
 	  {
-	    
-	    //tf2::Transform transform(quat);
-	    //tf2::Vector3 result = transform * xyz;
-	    //cout <<"ORIG " << xyz[0] << " " << xyz[2] <<  " TRANSFORM " << result[0] << " " << result[2] << endl;
-
 	     Rgba color = unpack_float(currPoint.w);
 	     uchar r = uchar(color.r);
 	     uchar b = uchar(color.b);
@@ -127,23 +124,51 @@ void DetectWhiteLines::whiteLineDetection()
       cv::HoughLinesP(xzMat,lines,1,CV_PI/180,20,10,1);
       for( const auto& i : lines)
       {
-        line(outputImage,cv::Point(i[0],i[1]),cv::Point(i[2],i[3]),cv::Scalar(255,255,255),2);
+        line(outputImage,cv::Point(i[0],i[1]),cv::Point(i[2],i[3]),cv::Scalar(111),2);
       }
       //cv::resize(outputImage,outputImage,s,cv::INTER_LANCZOS4);
 }
 
 void DetectWhiteLines::imuTransform(const sensor_msgs::ImuConstPtr &imu)
 {
+   tf2_ros::Buffer buff;
+   tf2_ros::TransformListener trans(buff);
+  try{
+     createBodyFrame(buff.lookupTransform("/zed_camera","/imu",ros::Time(0)));
+  }
+  catch(tf2::TransformException &ex){
+    ROS_WARN("%s",ex.what());
+    ros::Duration(1.0).sleep();
+  }
+  
   tf2Scalar arr[4] = {imu->orientation.x,imu->orientation.y,imu->orientation.z,imu->orientation.w};
   quat = tf2::Quaternion(arr[0],arr[2],arr[2],arr[3]);
 }
 
-DetectWhiteLines::DetectWhiteLines(const DetectWhiteLines & other ) : it{other.node}
+DetectWhiteLines::DetectWhiteLines(const DetectWhiteLines & other )
 {
-  pub = other.pub;
   xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
-  outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
+  outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0));
 }
+
+void DetectWhiteLines::publish()
+{
+    nav_msgs::OccupancyGrid occ;
+    occ.header.seq = seqId++;
+    occ.header.frame_id = "test";
+    occ.header.stamp = ros::Time().now();
+    //MetaData
+    occ.info.map_load_time = ros::Time().now();
+    occ.info.resolution = XDIVISOR;
+    occ.info.width = WIDTH;
+    occ.info.height = HEIGHT;
+    //occ.info.origin = geometry_msgs::Pose(p, q);'
+    occ.data.resize(xzMat.total());
+    memcpy(&(occ.data.front()), outputImage.data, xzMat.elemSize() * xzMat.total());
+    occ_pub.publish(occ);
+    
+}
+
 
 void DetectWhiteLines::detect(const ros::TimerEvent&)
 {
@@ -153,17 +178,14 @@ void DetectWhiteLines::detect(const ros::TimerEvent&)
     bool value = loadPointCloud();
     if(value)
     {
-      double val = findMinX();
-      cout << val << endl;
       convertXZ();
       displayXZ(7);
     
       whiteLineDetection();
       displayWL(7);
-    
+
+      publish();
       
-      sensor_msgs::ImagePtr im = cv_bridge::CvImage(std_msgs::Header(), "bgr8", outputImage).toImageMsg();
-      pub.publish(im);
     
       zed.close();
       clearXZ();
