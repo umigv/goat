@@ -18,8 +18,7 @@ int main(int argc, char** argv) {
     model_req.model_name = "mybot";
     gazebo_msgs::GetModelStateResponse model_rep;
 
-    ros::Rate r(50.0); //more than 50 Hz?
-    while(nh.ok()) {
+    auto callback = [&client, &model_req, &model_rep, &pub](const ros::TimerEvent& event){
         if(!client.call(model_req, model_rep)) {
             ROS_ERROR("Call failed to gazebo/get_model_state service");
             ros::shutdown(); ros::waitForShutdown(); return 1;
@@ -36,6 +35,8 @@ int main(int argc, char** argv) {
             ROS_ERROR_STREAM(model_rep.status_message);
             ros::shutdown(); ros::waitForShutdown(); return 1;
         }
-	    r.sleep();
-    }
+    };
+
+    ros::Timer frequency = nh.createTimer(ros::Duration(1/50), callback);
+    ros::spin();
 }
