@@ -25,9 +25,9 @@ int main(int argc, char** argv) {
             ros::shutdown(); ros::waitForShutdown(); return 1;
         }
         if(model_rep.success) {
-            nav_msgs::Odometry odom;
-            odom.pose.pose = model_rep.pose;
-            odom.twist.twist = model_rep.twist;
+            boost::shared_ptr<nav_msgs::Odometry> odom = boost::make_shared<nav_msgs::Odometry> ();
+            odom->pose.pose = model_rep.pose;
+            odom->twist.twist = model_rep.twist;
 
             pub.publish(odom);
         }
