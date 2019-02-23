@@ -7,11 +7,7 @@
 int main(int argc, char** argv) {
     ros::init(argc, argv, "odometry");
     ros::NodeHandle nh;
-    int timeout;
-    if(!nh.param("timeout", timeout, 250)){
-        ROS_FATAL_STREAM("Missing Parameter: timeout");
-        ros::shutdown(); ros::waitForShutdown(); return 1;
-    }
+    const int timeout nh.param("timeout", 250);
     ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odometry/filtered", timeout);
     ros::service::waitForService("gazebo/get_model_state", -1); // timeout?
     ros::ServiceClient client = nh.serviceClient<gazebo_msgs::GetModelState>("gazebo/get_model_state");
@@ -46,12 +42,7 @@ int main(int argc, char** argv) {
             ros::shutdown();
         }
     };
-    double frequency;
-    if(!nh.param("frequency", frequency, 60.0)){
-        ROS_FATAL_STREAM("Missing Parameter: frequency");
-        ros::shutdown(); ros::waitForShutdown(); return 1;
-    }
-
+    const double frequency = nh.param("frequency", 60.0);
     nh.createTimer(ros::Duration(1/frequency), callback);
     ros::spin();
 }
