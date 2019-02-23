@@ -14,8 +14,14 @@ int main(int argc, char** argv) {
         ROS_ERROR("Service Handle is not valid");
         ros::shutdown(); ros::waitForShutdown(); return 1;
     }
+
+    std::string robot_name;
+    if(!nh.getParam("robot_name", robot_name)){
+        ROS_FATAL_STREAM("Missing Parameter: robot_name");
+        ros::shutdown(); ros::waitForShutdown(); return 1;
+    }
     gazebo_msgs::GetModelStateRequest model_req;
-    model_req.model_name = "mybot";
+    model_req.model_name = robot_name;
     gazebo_msgs::GetModelStateResponse model_rep;
 
     auto callback = [&client, &model_req, &model_rep, &pub](const ros::TimerEvent& event){
@@ -36,7 +42,12 @@ int main(int argc, char** argv) {
             ros::shutdown(); ros::waitForShutdown(); return 1;
         }
     };
+    double frequency;
+    if(!nh.getParam("frequency", frequency)){
+        ROS_FATAL_STREAM("Missing Parameter: frequency");
+        ros::shutdown(); ros::waitForShutdown(); return 1;
+    }
 
-    ros::Timer frequency = nh.createTimer(ros::Duration(1/50), callback);
+    nh.createTimer(ros::Duration(1/frequency), callback);
     ros::spin();
 }
