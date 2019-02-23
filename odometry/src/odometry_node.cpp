@@ -20,21 +20,19 @@ int main(int argc, char** argv) {
 
     ros::Rate r(50.0); //more than 50 Hz?
     while(nh.ok()) {
-        if(client.call(model_req, model_rep)) {
-            if(model_rep.success) {
-                nav_msgs::Odometry odom;
-                odom.pose.pose = model_rep.pose;
-                odom.twist.twist = model_rep.twist;
-
-                pub.publish(odom);
-            }
-            else { // model_rep.success
-                ROS_ERROR("Call succeded, but returned failed response");
-                ros::shutdown(); ros::waitForShutdown(); return 1;
-            }
-        }
-        else{ // client.call(model_req, model_rep)
+        if(!client.call(model_req, model_rep)) {
             ROS_ERROR("Call failed");
+            ros::shutdown(); ros::waitForShutdown(); return 1;
+        }
+        if(model_rep.success) {
+            nav_msgs::Odometry odom;
+            odom.pose.pose = model_rep.pose;
+            odom.twist.twist = model_rep.twist;
+
+            pub.publish(odom);
+        }
+        else { // model_rep.success
+            ROS_ERROR("Call succeded, but returned failed response");
             ros::shutdown(); ros::waitForShutdown(); return 1;
         }
 	    r.sleep();
