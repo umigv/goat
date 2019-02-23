@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     ros::Rate r(50.0); //more than 50 Hz?
     while(nh.ok()) {
         if(!client.call(model_req, model_rep)) {
-            ROS_ERROR("Call failed");
+            ROS_ERROR("Call failed to gazebo/get_model_state service");
             ros::shutdown(); ros::waitForShutdown(); return 1;
         }
         if(model_rep.success) {
@@ -33,6 +33,7 @@ int main(int argc, char** argv) {
         }
         else { // model_rep.success
             ROS_ERROR("Call succeded, but returned failed response");
+            ROS_ERROR_STREAM(model_rep.status_message);
             ros::shutdown(); ros::waitForShutdown(); return 1;
         }
 	    r.sleep();
