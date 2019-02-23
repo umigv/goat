@@ -5,7 +5,7 @@
 
   <maintainer email="snoliver@umich.edu">Sean Oliver</maintainer>
 
-  <license>BSD-3</license>
+  <license>BSD 3-Clause Licsense</license>
 
   <url type="repository">https://github.com/umigv/goat</url>
 
@@ -15,6 +15,4 @@
   <depend>nav_msgs</depend>
   <depend>roscpp</depend>
   <depend>gazebo_msgs</depend>
-
-
 </package>

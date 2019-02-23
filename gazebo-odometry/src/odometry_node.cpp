@@ -7,7 +7,12 @@
 int main(int argc, char** argv) {
     ros::init(argc, argv, "odometry");
     ros::NodeHandle nh;
-    ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odometry/filtered", 250);
+    int timeout;
+    if(!nh.param("timeout", timeout, 250)){
+        ROS_FATAL_STREAM("Missing Parameter: timeout");
+        ros::shutdown(); ros::waitForShutdown(); return 1;
+    }
+    ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odometry/filtered", timeout);
     ros::service::waitForService("gazebo/get_model_state", -1); // timeout?
     ros::ServiceClient client = nh.serviceClient<gazebo_msgs::GetModelState>("gazebo/get_model_state");
     if(!client.isValid()){
@@ -27,23 +32,22 @@ int main(int argc, char** argv) {
     auto callback = [&client, &model_req, &model_rep, &pub](const ros::TimerEvent& event){
         if(!client.call(model_req, model_rep)) {
             ROS_ERROR("Call failed to gazebo/get_model_state service");
-            ros::shutdown(); ros::waitForShutdown(); return 1;
+            ros::shutdown();
         }
         if(model_rep.success) {
-            boost::shared_ptr<nav_msgs::Odometry> odom = boost::make_shared<nav_msgs::Odometry> ();
+            auto odom = boost::make_shared<nav_msgs::Odometry> ();
             odom->pose.pose = model_rep.pose;
             odom->twist.twist = model_rep.twist;
 
             pub.publish(odom);
         }
         else { // model_rep.success
-            ROS_ERROR("Call succeded, but returned failed response");
-            ROS_ERROR_STREAM(model_rep.status_message);
-            ros::shutdown(); ros::waitForShutdown(); return 1;
+            ROS_ERROR_STREAM("Call succeded, but request could not be fulfilled: " << model_rep.status_message);
+            ros::shutdown();
         }
     };
     double frequency;
-    if(!nh.getParam("frequency", frequency)){
+    if(!nh.param("frequency", frequency, 60.0)){
         ROS_FATAL_STREAM("Missing Parameter: frequency");
         ros::shutdown(); ros::waitForShutdown(); return 1;
     }
