@@ -11,12 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   gazebo_msgs
 )
 
-catkin_package(
-   INCLUDE_DIRS include
-   LIBRARIES ${PROJECT_NAME}
-   CATKIN_DEPENDS roscpp nav_msgs gazebo_msgs
-)
-
 include_directories(
  include
   ${catkin_INCLUDE_DIRS}
