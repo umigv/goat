@@ -57,10 +57,10 @@ int main(int argc, char** argv) {
     if (!file.is_open()) {
         ROS_FATAL_STREAM("Invalid Filename" << filename);
         return 1;
-    }
+	}
 
-    std::vector<TimeAndCmdVel> lines(std::istream_iterator<TimeAndCmdVel>(file), {});
-    std::vector<ros::Timer> timers;
+	std::vector<TimeAndCmdVel> lines(std::istream_iterator<TimeAndCmdVel>(file), {});
+	std::vector<ros::Timer> timers;
 	timers.reserve(lines.size());
 
 
@@ -70,18 +70,19 @@ int main(int argc, char** argv) {
 	}
 
 	std::transform(lines.cbegin(), lines.cend(), std::back_inserter(timers), [&nh, &pub](const TimeAndCmdVel &directive) {
-		
+
 		auto callback = [cmd_vel = directive.cmd_vel, &pub](const ros::TimerEvent& event) {
 			pub.publish(cmd_vel);			
 		};
-        return nh.createTimer(directive.time, callback, true);
-    });
+		return nh.createTimer(directive.time, callback, true);
+	});
 
+	auto comp = [](const TimeAndCmdVel &lhs, const TimeAndCmdVel &rhs) { return lhs.time < rhs.time; };
 
-	if(!std::is_sorted(timers.begin(), timers.end())) {
+	if(!std::is_sorted(timers.begin(), timers.end()), comp) {
 
 		ROS_WARN_STREAM("Commands in the Input file should be in time-increasing order, resolved internally");
 	}
 
-    ros::spin();
+	ros::spin();
 }
