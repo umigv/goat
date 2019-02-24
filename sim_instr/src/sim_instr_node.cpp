@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
     ros::Publisher pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
 
 	while (pub.getNumSubscribers() == 0) {
-		ros::spinOnce();	
+		ros::spinOnce();
 	}
 
     std::string filename;
