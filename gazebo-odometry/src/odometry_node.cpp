@@ -7,7 +7,7 @@
 int main(int argc, char** argv) {
     ros::init(argc, argv, "odometry");
     ros::NodeHandle nh;
-    const int timeout nh.param("timeout", 250);
+    const int timeout = nh.param("timeout", 250);
     ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odometry/filtered", timeout);
     ros::service::waitForService("gazebo/get_model_state", -1); // timeout?
     ros::ServiceClient client = nh.serviceClient<gazebo_msgs::GetModelState>("gazebo/get_model_state");
@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     }
 
     std::string robot_name;
-    if(!nh.getParam("robot_name", robot_name)){
+    if(!nh.getParam("robotName", robot_name)){
         ROS_FATAL_STREAM("Missing Parameter: robot_name");
         ros::shutdown(); ros::waitForShutdown(); return 1;
     }
