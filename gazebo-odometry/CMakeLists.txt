@@ -16,6 +16,8 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+catkin_package()
+
 add_executable(${PROJECT_NAME}_node src/odometry_node.cpp)
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
