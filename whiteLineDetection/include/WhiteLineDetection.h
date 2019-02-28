@@ -13,7 +13,6 @@
 #include <tf2_ros/buffer.h>
 
 
-
 using namespace std;
 using namespace sl;
 
@@ -65,6 +64,7 @@ public:
   
   void transformIMU(int & x, int & z);
 
+  void loadBuffer(tf2_ros::Buffer * b) { buffer = b;}
   
 private:
   const int MAX_X_VALUE = 12;
@@ -89,6 +89,7 @@ private:
   ros::Publisher occ_pub;
   geometry_msgs::TransformStamped bodyFrame;
   int seqId;
+  tf2_ros::Buffer * buffer;
   
   struct Rgba {
    std::uint8_t r;

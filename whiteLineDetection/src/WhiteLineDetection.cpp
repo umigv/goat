@@ -1,4 +1,5 @@
 #include "WhiteLineDetection.h"
+#include <tf2/convert.h>
 //#include "ros/ros.h"
 bool DetectWhiteLines::initCamera()
 {
@@ -77,8 +78,11 @@ void DetectWhiteLines::convertXZ()
 	  xyz[2] = currPoint.z;
 	  tf2::Transform transform(quat);
 	
-	  tf2::Vector3 result = transform * xyz;
 	  xyz = transform * xyz;
+	  //tf2::Stamped<tf2::Transform> bodyTransform;
+	  //tf2::fromMsg(bodyFrame,bodyTransform);
+	  //xyz = bodyTransform * xyz;
+	  
 	  
           int print = 0;
           if(isValidPoint(xyz[0],true))
@@ -131,15 +135,15 @@ void DetectWhiteLines::whiteLineDetection()
 
 void DetectWhiteLines::imuTransform(const sensor_msgs::ImuConstPtr &imu)
 {
-   tf2_ros::Buffer buff;
-   tf2_ros::TransformListener trans(buff);
   try{
-     createBodyFrame(buff.lookupTransform("/zed_camera","/imu",ros::Time(0)));
+    bodyFrame = buffer->lookupTransform("zed_center","imu",ros::Time(0));
   }
   catch(tf2::TransformException &ex){
     ROS_WARN("%s",ex.what());
-    ros::Duration(1.0).sleep();
+    //ros::Duration(1.0).sleep();
   }
+    cout << bodyFrame.transform.translation.x << endl;
+
   
   tf2Scalar arr[4] = {imu->orientation.x,imu->orientation.y,imu->orientation.z,imu->orientation.w};
   quat = tf2::Quaternion(arr[0],arr[2],arr[2],arr[3]);
