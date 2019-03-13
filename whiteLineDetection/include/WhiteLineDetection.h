@@ -11,6 +11,7 @@
 #include <tf2/LinearMath/Transform.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <tf2_ros/buffer.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 
 using namespace std;
@@ -42,7 +43,6 @@ public:
   
   void imuTransform(const sensor_msgs::ImuConstPtr &imu);
   void detect(const ros::TimerEvent&);
-  void createBodyFrame(geometry_msgs::TransformStamped transform );
   
   void displayXZ(int time)
   {
@@ -68,11 +68,11 @@ public:
   
 private:
   const int MAX_X_VALUE = 12;
-  const int MIN_X_VALUE = -2;
+  const int MIN_X_VALUE = -3;
   const int MAX_Z_VALUE = 7;
-  const int MIN_Z_VALUE = 0;
+  const int MIN_Z_VALUE = -2;
   const double XDIVISOR = 0.01;
-  const double ZDIVISOR = 0.01;
+  const double ZDIVISOR = 0.05;
   const int HEIGHT = 1280;
   const int WIDTH = 720;
   const int SHIFTVAL = 4;

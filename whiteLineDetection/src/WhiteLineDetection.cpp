@@ -15,7 +15,6 @@ bool DetectWhiteLines::initCamera()
      zed.close();
      return false;
    }
-   //cout << "CAMERA INITIALIZED\n";
    return true;
 }
 
@@ -57,13 +56,6 @@ bool DetectWhiteLines::isValidPoint(float currVal, bool isX)
 }
 
 
-void DetectWhiteLines::createBodyFrame(geometry_msgs::TransformStamped  transform )
-{
-  bodyFrame = transform;
-  cout << bodyFrame.transform.translation.x << endl;
-}
-
-
 void DetectWhiteLines::convertXZ()
 {
    sl::float4 currPoint;
@@ -77,12 +69,12 @@ void DetectWhiteLines::convertXZ()
 	  xyz[1] = currPoint.y;
 	  xyz[2] = currPoint.z;
 	  tf2::Transform transform(quat);
-	
+
+
 	  xyz = transform * xyz;
-	  //tf2::Stamped<tf2::Transform> bodyTransform;
-	  //tf2::fromMsg(bodyFrame,bodyTransform);
-	  //xyz = bodyTransform * xyz;
-	  
+	  tf2::Stamped<tf2::Transform> bodyTransform;
+	  tf2::fromMsg(bodyFrame,bodyTransform);
+	  xyz = bodyTransform * xyz;
 	  
           int print = 0;
           if(isValidPoint(xyz[0],true))
@@ -92,7 +84,7 @@ void DetectWhiteLines::convertXZ()
           }
           if(isValidPoint(xyz[2],false))
           {
-	     xyz[2] = static_cast<int>(xyz[2] / ZDIVISOR);
+	    xyz[2] = static_cast<int>((xyz[2] + 3) / ZDIVISOR);
 	     print++;
           }
 
@@ -140,10 +132,7 @@ void DetectWhiteLines::imuTransform(const sensor_msgs::ImuConstPtr &imu)
   }
   catch(tf2::TransformException &ex){
     ROS_WARN("%s",ex.what());
-    //ros::Duration(1.0).sleep();
   }
-    cout << bodyFrame.transform.translation.x << endl;
-
   
   tf2Scalar arr[4] = {imu->orientation.x,imu->orientation.y,imu->orientation.z,imu->orientation.w};
   quat = tf2::Quaternion(arr[0],arr[2],arr[2],arr[3]);
