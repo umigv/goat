@@ -1,4 +1,3 @@
-#include <ros/ros.h>
 #include <opencv2/opencv.hpp>
 #include <nav_msgs/OccupancyGrid Message>
 #include "OccupancyGrid.h"
@@ -71,20 +70,5 @@ int main(int argc, char** argv)
         outFile << " - " << grid.at(i) << endl;
     }
 
-    
-    // initialize node
-    //ros::init(argc, argv, "occupancy_grid_constructor_node");
-    
-    //ros::NodeHandle n;
-    
-    //ros::Publisher pub = n.advertise<nav_msgs::OccupancyGrid>("occupancygrid", 1000);
-    
-    //nav_msgs::OccupancyGrid ogm;
-    
-    // make the occupancy grid message here
-    
-    
-    // Stop the node's resources and return
-    ros::shutdown();
     return 0;
 }
