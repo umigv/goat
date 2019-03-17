@@ -6,20 +6,37 @@
 #ifndef OccupanyGrid
 #define OccupanyGrid
 
+#include <vector>
+
 class OccupancyGridInfo
 {
 public:
     OccupancyGridInfo():
-    resolution(0), width(0), height(0)
+    resolution(1), width(0), height(0)
     {
     }
     
     OccupancyGridInfo(unsigned int w, unsigned int h):
-    resolution(0), width(w), height(h)
+    resolution(1), width(w), height(h)
     {
         probabilities.resize(width * height, 0);
     }
     
+    float getResolution() {
+        return resolution;
+    }
+
+    unsigned int getWidth() {
+        return width;
+    }
+    unsigned int getHeight() {
+        return height;
+    }
+
+    std::vector<int> getProbabilities() {
+        return probabilities;
+    }
+
     void set_probability(int i, int item)
     {
         probabilities[i] = item;

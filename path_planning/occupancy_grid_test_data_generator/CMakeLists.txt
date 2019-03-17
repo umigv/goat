@@ -6,7 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(occupancy_grid)
 
-find_package(catkin REQUIRED COMPONENTS nav_msgs roscpp std_msgs message_generation)
+find_package(catkin REQUIRED COMPONENTS nav_msgs geometry_msgs roscpp std_msgs message_generation)
 
 add_message_files(
 	FILES
@@ -15,7 +15,7 @@ add_message_files(
 generate_messages(
 	DEPENDENCIES)
 
-catkin_package(CATKIN_DEPENDS nav_msgs roscpp message_runtime)
+catkin_package(CATKIN_DEPENDS nav_msgs geometry_msgs roscpp message_runtime)
 
 add_executable(occupancy_grid occupancy_grid_constructor_node.cpp)
 

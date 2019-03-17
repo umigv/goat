@@ -3,6 +3,7 @@
 #include <nav_msgs/OccupancyGrid Message>
 #include "OccupancyGrid.h"
 #include <iostream>
+#include <fstream>
 
 using namespace cv;
 using namespace std;
@@ -50,15 +51,35 @@ int main(int argc, char** argv)
 {
     OccupancyGridInfo grid;
     grid = grid.fill_probabilities(argc, argv);
+
+    ofstream outFile("occupancyGrid.yaml");
+    outFile << "Header:" << endl;
+    outFile << " - seq: 0" << endl;
+    outFile << " - timeStamp: 0" << endl;
+    outFile << " - frameID: 0" << endl;
+
+    outFile << "MapMetaData:" << endl;
+    outFile << " - mapLoadTime: 0" << endl;
+    outFile << " - resolution: " << grid.getResolution() << endl;
+    outFile << " - width: " << grid.getWidth() << endl;
+    outFile << " - height: " << grid.getHeight() << endl;
+
+
+    outFile << "Data:"
+    vector<int> prob = grid.getProbabilities();
+    for(int i = 0; i < (int) grid.size(); i++) {
+        outFile << " - " << grid.at(i) << endl;
+    }
+
     
     // initialize node
-    ros::init(argc, argv, "occupancy_grid_constructor_node");
+    //ros::init(argc, argv, "occupancy_grid_constructor_node");
     
-    ros::NodeHandle n;
+    //ros::NodeHandle n;
     
-    ros::Publisher pub = n.advertise<nav_msgs::OccupancyGrid>("occupancygrid", 1000);
+    //ros::Publisher pub = n.advertise<nav_msgs::OccupancyGrid>("occupancygrid", 1000);
     
-    nav_msgs::OccupancyGrid ogm;
+    //nav_msgs::OccupancyGrid ogm;
     
     // make the occupancy grid message here
     
