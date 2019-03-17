@@ -47,6 +47,7 @@ double DetectWhiteLines::findMinX()
 
 bool DetectWhiteLines::isValidPoint(float currVal, bool isX)
 {
+  //true means X-coord, false means Z-coord
   if(isX)
     return (!isnan(currVal) && !isinf(currVal) && currVal < MAX_X_VALUE \
 	    && currVal > MIN_X_VALUE);
@@ -70,11 +71,17 @@ void DetectWhiteLines::convertXZ()
 	  xyz[2] = currPoint.z;
 	  tf2::Transform transform(quat);
 
-
-	  xyz = transform * xyz;
+      
+	  
 	  tf2::Stamped<tf2::Transform> bodyTransform;
 	  tf2::fromMsg(bodyFrame,bodyTransform);
 	  xyz = bodyTransform * xyz;
+
+	  xyz = transform * xyz;
+
+	  /* cout << bodyFrame.transform.translation.x << " " << bodyFrame.transform.translation.y << " " << bodyFrame.transform.translation.z << endl;
+	  cout << bodyFrame.transform.rotation.x << " " << bodyFrame.transform.rotation.y << " " << bodyFrame.transform.rotation.z << " " << bodyFrame.transform.rotation.w << endl;
+	  */
 	  
           int print = 0;
           if(isValidPoint(xyz[0],true))
@@ -84,7 +91,7 @@ void DetectWhiteLines::convertXZ()
           }
           if(isValidPoint(xyz[2],false))
           {
-	    xyz[2] = static_cast<int>((xyz[2] + 3) / ZDIVISOR);
+	     xyz[2] = static_cast<int>((xyz[2]) / ZDIVISOR);
 	     print++;
           }
 
@@ -127,15 +134,16 @@ void DetectWhiteLines::whiteLineDetection()
 
 void DetectWhiteLines::imuTransform(const sensor_msgs::ImuConstPtr &imu)
 {
-  try{
-    bodyFrame = buffer->lookupTransform("zed_center","imu",ros::Time(0));
-  }
-  catch(tf2::TransformException &ex){
-    ROS_WARN("%s",ex.what());
-  }
-  
   tf2Scalar arr[4] = {imu->orientation.x,imu->orientation.y,imu->orientation.z,imu->orientation.w};
   quat = tf2::Quaternion(arr[0],arr[2],arr[2],arr[3]);
+  
+  try{
+     bodyFrame = buffer->lookupTransform("zed_center","imu",ros::Time(0));
+  }
+  catch(tf2::TransformException &ex){
+     ROS_WARN("%s",ex.what());
+  }
+  
 }
 
 DetectWhiteLines::DetectWhiteLines(const DetectWhiteLines & other )
@@ -155,7 +163,7 @@ void DetectWhiteLines::publish()
     occ.info.resolution = XDIVISOR;
     occ.info.width = WIDTH;
     occ.info.height = HEIGHT;
-    //occ.info.origin = geometry_msgs::Pose(p, q);'
+    //occ.info.origin = geometry_msgs::Pose(p, q);
     occ.data.resize(xzMat.total());
     memcpy(&(occ.data.front()), outputImage.data, xzMat.elemSize() * xzMat.total());
     occ_pub.publish(occ);
