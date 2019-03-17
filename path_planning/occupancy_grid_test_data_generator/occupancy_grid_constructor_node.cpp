@@ -1,5 +1,4 @@
 #include <opencv2/opencv.hpp>
-#include <nav_msgs/OccupancyGrid Message>
 #include "OccupancyGrid.h"
 #include <iostream>
 #include <fstream>
@@ -44,6 +43,7 @@ OccupancyGridInfo OccupancyGridInfo::fill_probabilities(int argc, char **argv)
             i++;
         }
     }
+    return grid;
 }
 
 int main(int argc, char** argv)
@@ -64,10 +64,10 @@ int main(int argc, char** argv)
     outFile << " - height: " << grid.getHeight() << endl;
 
 
-    outFile << "Data:"
+    outFile << "Data:";
     vector<int> prob = grid.getProbabilities();
-    for(int i = 0; i < (int) grid.size(); i++) {
-        outFile << " - " << grid.at(i) << endl;
+    for(int i = 0; i < (int) prob.size(); i++) {
+        outFile << " - " << prob.at(i) << endl;
     }
 
     return 0;
