@@ -1,0 +1,3 @@
+[submodule "path_planning/occupancy_grid_test_data_generator/yaml-cpp"]
+	path = path_planning/occupancy_grid_test_data_generator/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp/
