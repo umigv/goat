@@ -71,14 +71,17 @@ void DetectWhiteLines::convertXZ()
 	  xyz[2] = currPoint.z;
 	  tf2::Transform transform(quat);
 	  //cout << xyz[0] << " " << xyz[1] << " " << xyz[2] << endl;
-      
-	  
+         
 	  tf2::Stamped<tf2::Transform> bodyTransform;
 	  tf2::fromMsg(bodyFrame,bodyTransform);
-	  //xyz = bodyTransform * xyz;
+
+	  xyz = bodyTransform * xyz;
 
 	  xyz = transform * xyz;
+
+	  xyz[0] *= -1;
 	  
+	  //cout << xyz[0] << " " << xyz[1] << " " << xyz[2] << endl;
           int print = 0;
           if(isValidPoint(xyz[1],true))
           {
