@@ -5,7 +5,7 @@ bool DetectWhiteLines::initCamera()
 {
    initParameters.camera_resolution = RESOLUTION_HD720;
    initParameters.depth_mode = DEPTH_MODE_PERFORMANCE;
-   initParameters.coordinate_system = COORDINATE_SYSTEM_IMAGE;
+   initParameters.coordinate_system = COORDINATE_SYSTEM_RIGHT_HANDED_Z_UP_X_FWD; 
    initParameters.coordinate_units = UNIT_METER;
 
    ERROR_CODE err = zed.open(initParameters);
@@ -70,32 +70,28 @@ void DetectWhiteLines::convertXZ()
 	  xyz[1] = currPoint.y;
 	  xyz[2] = currPoint.z;
 	  tf2::Transform transform(quat);
-
+	  //cout << xyz[0] << " " << xyz[1] << " " << xyz[2] << endl;
       
 	  
 	  tf2::Stamped<tf2::Transform> bodyTransform;
 	  tf2::fromMsg(bodyFrame,bodyTransform);
-	  xyz = bodyTransform * xyz;
+	  //xyz = bodyTransform * xyz;
 
 	  xyz = transform * xyz;
-
-	  /* cout << bodyFrame.transform.translation.x << " " << bodyFrame.transform.translation.y << " " << bodyFrame.transform.translation.z << endl;
-	  cout << bodyFrame.transform.rotation.x << " " << bodyFrame.transform.rotation.y << " " << bodyFrame.transform.rotation.z << " " << bodyFrame.transform.rotation.w << endl;
-	  */
 	  
           int print = 0;
-          if(isValidPoint(xyz[0],true))
+          if(isValidPoint(xyz[1],true))
           {
-	     xyz[0] = static_cast<int>((xyz[0] + SHIFTVAL ) / XDIVISOR);
+	     xyz[1] = static_cast<int>((xyz[1] + SHIFTVAL ) / XDIVISOR);
 	     print++;
           }
-          if(isValidPoint(xyz[2],false))
+          if(isValidPoint(xyz[0],false))
           {
-	     xyz[2] = static_cast<int>((xyz[2]) / ZDIVISOR);
+	     xyz[0] = static_cast<int>((xyz[0]) / ZDIVISOR);
 	     print++;
           }
 
-	  xyz[1] = 0;
+	  xyz[2] = 0;
 	  
 	  if(print == 2)
 	  {
@@ -104,11 +100,11 @@ void DetectWhiteLines::convertXZ()
 	     uchar b = uchar(color.b);
 	     uchar g = uchar(color.g);
 
-	     cv::Vec3b val = xzMat.at<cv::Vec3b>(cv::Point(xyz[0],xyz[2]));
+	     cv::Vec3b val = xzMat.at<cv::Vec3b>(cv::Point(xyz[1],xyz[0]));
 	     val[0] = b;
 	     val[1] = g;
 	     val[2] = r;
-	     xzMat.at<cv::Vec3b>(cv::Point(xyz[0],xyz[2])) = {b,g,r};
+	     xzMat.at<cv::Vec3b>(cv::Point(xyz[1],xyz[0])) = {b,g,r};
 	  }
 	  print = 0;
       }
