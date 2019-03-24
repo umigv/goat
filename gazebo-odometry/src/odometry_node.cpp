@@ -20,6 +20,7 @@ int main(int argc, char** argv) {
     std::string robot_name;
     if(!private_handle.getParam("robot_name", robot_name)){
         ROS_FATAL_STREAM("Missing Parameter: robot_name");
+        ROS_FATAL_STREAM(std::string{argv[1]});
         ros::shutdown(); ros::waitForShutdown(); return 1;
     }
     gazebo_msgs::GetModelStateRequest model_req;
