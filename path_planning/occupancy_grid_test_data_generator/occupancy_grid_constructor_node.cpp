@@ -50,25 +50,25 @@ int main(int argc, char** argv)
 {
     OccupancyGridInfo grid;
     grid = grid.fill_probabilities(argc, argv);
-
+    
     ofstream outFile("occupancyGrid.yaml");
-    outFile << "Header:" << endl;
-    outFile << " - seq: 0" << endl;
-    outFile << " - timeStamp: 0" << endl;
-    outFile << " - frameID: 0" << endl;
-
-    outFile << "MapMetaData:" << endl;
-    outFile << " - mapLoadTime: 0" << endl;
-    outFile << " - resolution: " << grid.getResolution() << endl;
-    outFile << " - width: " << grid.getWidth() << endl;
-    outFile << " - height: " << grid.getHeight() << endl;
-
-
-    outFile << "Data:";
+    outFile << "Header:" << "\n";
+    outFile << " - seq: 0" << "\n";
+    outFile << " - timeStamp: 0" << "\n";
+    outFile << " - frameID: 0" << "\n";
+    
+    outFile << "MapMetaData:" << "\n";
+    outFile << " - mapLoadTime: 0" << "\n";
+    outFile << " - resolution: " << grid.getResolution() << "\n";
+    outFile << " - width: " << grid.getWidth() << "\n";
+    outFile << " - height: " << grid.getHeight() << "\n";
+    
+    
+    outFile << "Data:\n";
     vector<int> prob = grid.getProbabilities();
     for(int i = 0; i < (int) prob.size(); i++) {
-        outFile << " - " << prob.at(i) << endl;
+        outFile << " - " << prob.at(i) << "\n";
     }
-
+    
     return 0;
 }
