@@ -5,7 +5,7 @@ bool DetectWhiteLines::initCamera()
 {
    initParameters.camera_resolution = RESOLUTION_HD720;
    initParameters.depth_mode = DEPTH_MODE_PERFORMANCE;
-   initParameters.coordinate_system = COORDINATE_SYSTEM_RIGHT_HANDED_Z_UP_X_FWD; 
+   initParameters.coordinate_system = COORDINATE_SYSTEM_IMAGE;
    initParameters.coordinate_units = UNIT_METER;
 
    ERROR_CODE err = zed.open(initParameters);
@@ -70,31 +70,32 @@ void DetectWhiteLines::convertXZ()
 	  xyz[1] = currPoint.y;
 	  xyz[2] = currPoint.z;
 	  tf2::Transform transform(quat);
-	  //cout << xyz[0] << " " << xyz[1] << " " << xyz[2] << endl;
          
 	  tf2::Stamped<tf2::Transform> bodyTransform;
 	  tf2::fromMsg(bodyFrame,bodyTransform);
 
-	  xyz = bodyTransform * xyz;
-
 	  xyz = transform * xyz;
-
-	  xyz[0] *= -1;
+ 
+	  tf2::Vector3 newXYZ = {xyz[2],xyz[0],-1*xyz[1]};
 	  
-	  //cout << xyz[0] << " " << xyz[1] << " " << xyz[2] << endl;
+	  newXYZ = bodyTransform * newXYZ;
+	  tf2::Vector3 test = {1,0,-.5};
+	  test = bodyTransform * test;
+	  cout << test[0] <<" " << test[1] << " " << test[2] <<  endl;
+	    
           int print = 0;
-          if(isValidPoint(xyz[1],true))
+          if(isValidPoint(newXYZ[1],true))
           {
-	     xyz[1] = static_cast<int>((xyz[1] + SHIFTVAL ) / XDIVISOR);
+	     newXYZ[1] = static_cast<int>((newXYZ[1] + SHIFTVAL ) / XDIVISOR);
 	     print++;
           }
-          if(isValidPoint(xyz[0],false))
+          if(isValidPoint(newXYZ[0],false))
           {
-	     xyz[0] = static_cast<int>((xyz[0]) / ZDIVISOR);
+	     newXYZ[0] = static_cast<int>((newXYZ[0]) / ZDIVISOR);
 	     print++;
           }
 
-	  xyz[2] = 0;
+	  newXYZ[2] = 0;
 	  
 	  if(print == 2)
 	  {
@@ -103,11 +104,11 @@ void DetectWhiteLines::convertXZ()
 	     uchar b = uchar(color.b);
 	     uchar g = uchar(color.g);
 
-	     cv::Vec3b val = xzMat.at<cv::Vec3b>(cv::Point(xyz[1],xyz[0]));
+	     cv::Vec3b val = xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0]));
 	     val[0] = b;
 	     val[1] = g;
 	     val[2] = r;
-	     xzMat.at<cv::Vec3b>(cv::Point(xyz[1],xyz[0])) = {b,g,r};
+	     xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0])) = {b,g,r};
 	  }
 	  print = 0;
       }
@@ -134,10 +135,10 @@ void DetectWhiteLines::whiteLineDetection()
 void DetectWhiteLines::imuTransform(const sensor_msgs::ImuConstPtr &imu)
 {
   tf2Scalar arr[4] = {imu->orientation.x,imu->orientation.y,imu->orientation.z,imu->orientation.w};
-  quat = tf2::Quaternion(arr[0],arr[2],arr[2],arr[3]);
+  quat = tf2::Quaternion(arr[0],arr[1],arr[2],arr[3]);
   
   try{
-     bodyFrame = buffer->lookupTransform("zed_center","imu",ros::Time(0));
+    bodyFrame = buffer->lookupTransform("imu","zed_center",ros::Time(0));
   }
   catch(tf2::TransformException &ex){
      ROS_WARN("%s",ex.what());
@@ -179,10 +180,10 @@ void DetectWhiteLines::detect(const ros::TimerEvent&)
     if(value)
     {
       convertXZ();
-      displayXZ(7);
+      displayXZ(2);
     
       whiteLineDetection();
-      displayWL(7);
+      displayWL(2);
 
       publish();
       

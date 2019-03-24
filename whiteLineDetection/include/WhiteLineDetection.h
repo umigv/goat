@@ -67,15 +67,15 @@ public:
   void loadBuffer(tf2_ros::Buffer * b) { buffer = b;}
   
 private:
-  const int MAX_X_VALUE = 12;
-  const int MIN_X_VALUE = -3;
+  const int MAX_X_VALUE = 8;
+  const int MIN_X_VALUE = -5;
   const int MAX_Z_VALUE = 7;
   const int MIN_Z_VALUE = 0;
   const double XDIVISOR = 0.01;
   const double ZDIVISOR = 0.01;
   const int HEIGHT = 1280;
   const int WIDTH = 720;
-  const int SHIFTVAL = 4;
+  const int SHIFTVAL = 6;
 
   InitParameters initParameters;
 
