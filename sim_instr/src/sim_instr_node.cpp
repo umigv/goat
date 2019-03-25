@@ -4,13 +4,12 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-
+#include <iostream>
 
 struct TimeAndCmdVel{
     ros::Duration time;
     geometry_msgs::Twist cmd_vel;
 };
-
 
 std::istream& operator >> (std::istream& is, TimeAndCmdVel& line)
 {
@@ -41,10 +40,16 @@ int main(int argc, char** argv) {
     ros::NodeHandle nh("~");
     ros::Publisher pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
 
+	while (pub.getNumSubscribers() == 0) {
+		ros::spinOnce();
+	}
+
     std::string filename;
     if (!nh.getParam("filename", filename)) {
-        ROS_FATAL_STREAM("Missing Parameter: Filename");
-        return 1;
+        ROS_FATAL_STREAM("Missing Parameter: filename");
+        ros::shutdown();
+		ros::waitForShutdown();
+		return 1;
     }
 
     std::ifstream file(filename);
@@ -52,19 +57,31 @@ int main(int argc, char** argv) {
     if (!file.is_open()) {
         ROS_FATAL_STREAM("Invalid Filename" << filename);
         return 1;
-    }
+	}
 
-    std::vector<TimeAndCmdVel> lines(std::istream_iterator<TimeAndCmdVel>(file), {});
-    std::vector<ros::Timer> timers;
+	std::vector<TimeAndCmdVel> lines(std::istream_iterator<TimeAndCmdVel>(file), {});
+	std::vector<ros::Timer> timers;
+	timers.reserve(lines.size());
 
-    auto callback = [&pub, &lines](auto) {
-    pub.publish(lines.back().cmd_vel);
-    lines.pop_back();
-    };
 
-    std::transform(lines.cbegin(), lines.cend(), std::back_inserter(timers), [&nh, &callback](const TimeAndCmdVel &directive) { 
-        return nh.createTimer(directive.time, callback, true);
-    });
+	while (!ros::Time::isValid()) {
+		ros::spinOnce();
+		
+	}
 
-    ros::spin();
+	std::transform(lines.cbegin(), lines.cend(), std::back_inserter(timers), [&nh, &pub](const TimeAndCmdVel &directive) {
+
+		auto callback = [cmd_vel = directive.cmd_vel, &pub](const ros::TimerEvent& event) {
+			pub.publish(cmd_vel);			
+		};
+		return nh.createTimer(directive.time, callback, true);
+	});
+
+	auto comp = [](const TimeAndCmdVel &lhs, const TimeAndCmdVel &rhs) { return lhs.time < rhs.time; };
+
+	if(!std::is_sorted(timers.begin(), timers.end()), comp) {
+
+		ROS_WARN_STREAM("Commands in the Input file should be in time-increasing order, resolved internally");
+	}
+	ros::spin();
 }
