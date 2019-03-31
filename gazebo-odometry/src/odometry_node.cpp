@@ -6,19 +6,19 @@
 
 int main(int argc, char** argv) {
     ros::init(argc, argv, "odometry");
-    ros::NodeHandle nh("~");
-    ros::NodeHandle private_handle;
-    const int timeout = private_handle.param("timeout", 250);
-    ros::Publisher pub = nh.advertise<nav_msgs::Odometry>("odometry/filtered", timeout);
+    ros::NodeHandle private_handle("~");
+    ros::NodeHandle nh;
+    const int timeout = nh.param("timeout", 250);
+    ros::Publisher pub = private_handle.advertise<nav_msgs::Odometry>("odometry/filtered", timeout);
     ros::service::waitForService("gazebo/get_model_state", -1);
-    ros::ServiceClient client = nh.serviceClient<gazebo_msgs::GetModelState>("gazebo/get_model_state");
+    ros::ServiceClient client = private_handle.serviceClient<gazebo_msgs::GetModelState>("gazebo/get_model_state");
     if(!client.isValid()){
         ROS_ERROR("Service Handle is not valid");
         ros::shutdown(); ros::waitForShutdown(); return 1;
     }
 
     std::string robot_name;
-    if(!private_handle.getParam("odometry/robot_name", robot_name)){
+    if(!nh.getParam("odometry/robot_name", robot_name)){
         ROS_FATAL_STREAM("Missing Parameter: robot_name");
         ros::shutdown(); ros::waitForShutdown(); return 1;
     }

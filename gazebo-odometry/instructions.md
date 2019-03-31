@@ -1,3 +1,6 @@
+# Manual Call
+Run `rosservice call gazebo/get_model_state odometry/filtered mybot` to manually get odometry information.
+
 # Extracting Odometry Information
 1. Run Gazebo as described in the Teleop Section of the goat_description repo
 2. In a new terminal run `rosrun gazebo-odometry gazebo-odometry_node`
