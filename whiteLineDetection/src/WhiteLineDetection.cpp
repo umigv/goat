@@ -60,10 +60,10 @@ bool DetectWhiteLines::isValidPoint(float currVal, bool isX)
 void DetectWhiteLines::convertXZ()
 {
    sl::float4 currPoint;
-   tf2::Vector3  xyz;
-   for(size_t i = 0; i < HEIGHT; ++i)
+   tf2::Vector3 xyz;
+   for(size_t i = 0; i < HEIGHT; i+=2)
    {
-      for(size_t j = 0; j < WIDTH; ++j)
+      for(size_t j = 0; j < WIDTH; j+=2)
       {
           point_cloud.getValue(i,j,&currPoint);
 	  xyz[0] = currPoint.x;
@@ -79,9 +79,6 @@ void DetectWhiteLines::convertXZ()
 	  tf2::Vector3 newXYZ = {xyz[2],xyz[0],-1*xyz[1]};
 	  
 	  newXYZ = bodyTransform * newXYZ;
-	  //tf2::Vector3 test = {1,0,-.5};
-	  //test = bodyTransform * test;
-	  // cout << test[0] <<" " << test[1] << " " << test[2] <<  endl;
 	    
           int print = 0;
           if(isValidPoint(newXYZ[1],true))

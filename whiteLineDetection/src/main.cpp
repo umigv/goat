@@ -20,11 +20,11 @@ int main(int argc, char ** argv)
   tf2_ros::TransformListener trans(buff);
 
   detecter.loadBuffer(&buff);
-  
+
   ros::Subscriber sub = n.subscribe<sensor_msgs::Imu>
     ("/imu/data",1000, [&detecter](const sensor_msgs::ImuConstPtr &imu) {detecter.imuTransform(imu);});
-  ros::Timer whiteLineTime = n.createTimer(ros::Duration(0.05), [&detecter](const ros::TimerEvent& t ){ detecter.detect(t);});
+  ros::Timer whiteLineTime = n.createTimer(ros::Duration(0.5), [&detecter](const ros::TimerEvent& t ){ detecter.detect(t);});
   ros::spin();
-return  0;
+  return  0;
 }
  
