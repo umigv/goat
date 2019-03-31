@@ -13,7 +13,6 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-
 using namespace std;
 using namespace sl;
 
@@ -27,6 +26,8 @@ public:
     outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0));
     occ_pub = node.advertise<nav_msgs::OccupancyGrid>("nav_msgs/OccupancyGrid", 50);
     seqId = 0;
+ 
+	
   }
 
   ~DetectWhiteLines(){zed.close();}

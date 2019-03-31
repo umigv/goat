@@ -1,6 +1,6 @@
 #include "WhiteLineDetection.h"
 #include <tf2/convert.h>
-//#include "ros/ros.h"
+
 bool DetectWhiteLines::initCamera()
 {
    initParameters.camera_resolution = RESOLUTION_HD720;
@@ -79,9 +79,9 @@ void DetectWhiteLines::convertXZ()
 	  tf2::Vector3 newXYZ = {xyz[2],xyz[0],-1*xyz[1]};
 	  
 	  newXYZ = bodyTransform * newXYZ;
-	  tf2::Vector3 test = {1,0,-.5};
-	  test = bodyTransform * test;
-	  cout << test[0] <<" " << test[1] << " " << test[2] <<  endl;
+	  //tf2::Vector3 test = {1,0,-.5};
+	  //test = bodyTransform * test;
+	  // cout << test[0] <<" " << test[1] << " " << test[2] <<  endl;
 	    
           int print = 0;
           if(isValidPoint(newXYZ[1],true))
@@ -138,7 +138,7 @@ void DetectWhiteLines::imuTransform(const sensor_msgs::ImuConstPtr &imu)
   quat = tf2::Quaternion(arr[0],arr[1],arr[2],arr[3]);
   
   try{
-    bodyFrame = buffer->lookupTransform("imu","zed_center",ros::Time(0));
+    bodyFrame = buffer->lookupTransform("zed_center","base_link",ros::Time(0));
   }
   catch(tf2::TransformException &ex){
      ROS_WARN("%s",ex.what());
@@ -154,6 +154,7 @@ DetectWhiteLines::DetectWhiteLines(const DetectWhiteLines & other )
 
 void DetectWhiteLines::publish()
 {
+  /*
     nav_msgs::OccupancyGrid occ;
     occ.header.seq = seqId++;
     occ.header.frame_id = "test";
@@ -167,7 +168,7 @@ void DetectWhiteLines::publish()
     occ.data.resize(xzMat.total());
     memcpy(&(occ.data.front()), outputImage.data, xzMat.elemSize() * xzMat.total());
     occ_pub.publish(occ);
-    
+  */
 }
 
 
