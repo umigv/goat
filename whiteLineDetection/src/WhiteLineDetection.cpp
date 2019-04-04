@@ -3,113 +3,101 @@
 
 bool DetectWhiteLines::initCamera()
 {
-   initParameters.camera_resolution = RESOLUTION_HD720;
-   initParameters.depth_mode = DEPTH_MODE_PERFORMANCE;
-   initParameters.coordinate_system = COORDINATE_SYSTEM_IMAGE;
-   initParameters.coordinate_units = UNIT_METER;
+	initParameters.camera_resolution = RESOLUTION_HD720;
+	initParameters.depth_mode = DEPTH_MODE_PERFORMANCE;
+	initParameters.coordinate_system = COORDINATE_SYSTEM_IMAGE;
+	initParameters.coordinate_units = UNIT_METER;
 
-   ERROR_CODE err = zed.open(initParameters);
-   if(err != SUCCESS)
-   {
-     cerr << err << "\n";
-     zed.close();
-     return false;
-   }
-   return true;
+	ERROR_CODE err = zed.open(initParameters);
+	if(err != SUCCESS)
+	{
+		cerr << err << "\n";
+		zed.close();
+		return false;
+	}
+	return true;
 }
 
 bool DetectWhiteLines::loadPointCloud()
 {
-  ERROR_CODE erg = zed.grab();
-  if(erg == SUCCESS)
-  {
-    zed.retrieveMeasure(point_cloud,MEASURE_XYZRGBA);
-    return true;
-  }
-  return false;
+	ERROR_CODE erg = zed.grab();
+	if(erg == SUCCESS)
+	{
+		zed.retrieveMeasure(point_cloud,MEASURE_XYZRGBA);
+		return true;
+	}
+	return false;
 }
 
 
-double DetectWhiteLines::findMinX()
-{
-  sl::float4 currPoint;
-  double minX = MAX_X_VALUE;
-   for(int i = 0; i < HEIGHT; ++i)
-   {
-	point_cloud.getValue(i,0,&currPoint);
-	if(isValidPoint(currPoint.x,true))	
-	   minX = currPoint.x;
-   }
-   if(minX < 0) minX *= -1;
-   return minX;
-}
 
-
-bool DetectWhiteLines::isValidPoint(float currVal, bool isX)
+bool DetectWhiteLines::isValidPoint(float & currVal, bool isX)
 {
-  //true means X-coord, false means Z-coord
-  if(isX)
-    return (!isnan(currVal) && !isinf(currVal) && currVal < MAX_X_VALUE \
-	    && currVal > MIN_X_VALUE);
-  else
-    return (!isnan(currVal) && !isinf(currVal) && currVal < MAX_Z_VALUE && \
-	    currVal > MIN_Z_VALUE);  
+	if(isX)
+		return (!isnan(currVal) && !isinf(currVal) && currVal < MAX_Y_VALUE \
+			&& currVal > MIN_Y_VALUE);
+	else
+		return (!isnan(currVal) && !isinf(currVal) && currVal < MAX_X_VALUE && \
+			currVal > MIN_X_VALUE);  
 }
 
 
 void DetectWhiteLines::convertXZ()
 {
-   sl::float4 currPoint;
-   tf2::Vector3 xyz;
-   for(size_t i = 0; i < HEIGHT; i+=2)
-   {
-      for(size_t j = 0; j < WIDTH; j+=2)
-      {
-          point_cloud.getValue(i,j,&currPoint);
-	  xyz[0] = currPoint.x;
-	  xyz[1] = currPoint.y;
-	  xyz[2] = currPoint.z;
-	  tf2::Transform transform(quat);
+	valid = false;
+	sl::float4 currPoint;
+	tf2::Vector3 xyz;
+	for(size_t i = 0; i < HEIGHT; i+=2)
+	{
+		for(size_t j = 0; j < WIDTH; j+=2)
+		{
+			point_cloud.getValue(i,j,&currPoint);
+			xyz[0] = currPoint.x;
+			xyz[1] = currPoint.y;
+			xyz[2] = currPoint.z;
+			tf2::Transform transform(imuQuat);
          
-	  tf2::Stamped<tf2::Transform> bodyTransform;
-	  tf2::fromMsg(bodyFrame,bodyTransform);
+			tf2::Stamped<tf2::Transform> bodyTransform;
+			tf2::fromMsg(bodyFrame,bodyTransform);
 
-	  xyz = transform * xyz;
+			xyz = transform * xyz;
  
-	  tf2::Vector3 newXYZ = {xyz[2],xyz[0],-1*xyz[1]};
+			tf2::Vector3 newXYZ = {xyz[2],xyz[0],-1*xyz[1]};
 	  
-	  newXYZ = bodyTransform * newXYZ;
+			newXYZ = bodyTransform * newXYZ;
 	    
-          int print = 0;
-          if(isValidPoint(newXYZ[1],true))
-          {
-	     newXYZ[1] = static_cast<int>((newXYZ[1] + SHIFTVAL ) / XDIVISOR);
-	     print++;
-          }
-          if(isValidPoint(newXYZ[0],false))
-          {
-	     newXYZ[0] = static_cast<int>((newXYZ[0]) / ZDIVISOR);
-	     print++;
-          }
+			int print = 0;
+			
+			if(isValidPoint(newXYZ[1],Y))
+			{
+				newXYZ[1] = static_cast<int>((newXYZ[1] + SHIFTVAL ) / YDIVISOR);
+				print++;
+			}
+			if(isValidPoint(newXYZ[0],X))
+			{
+				 newXYZ[0] = static_cast<int>((newXYZ[0]) / XDIVISOR);
+				 print++;
+			}
 
-	  newXYZ[2] = 0;
+			newXYZ[2] = 0;
 	  
-	  if(print == 2)
-	  {
-	     Rgba color = unpack_float(currPoint.w);
-	     uchar r = uchar(color.r);
-	     uchar b = uchar(color.b);
-	     uchar g = uchar(color.g);
+			if(print == 2)
+			{
+				Rgba color = unpack_float(currPoint.w);
+				uchar r = uchar(color.r);
+				uchar b = uchar(color.b);
+				uchar g = uchar(color.g);
 
-	     cv::Vec3b val = xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0]));
-	     val[0] = b;
-	     val[1] = g;
-	     val[2] = r;
-	     xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0])) = {b,g,r};
-	  }
-	  print = 0;
-      }
-   }
+				cv::Vec3b val = xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0]));
+				val[0] = b;
+				val[1] = g;
+				val[2] = r;
+				xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0])) = {b,g,r};
+			}
+				print = 0;
+		}
+	}
+	valid = true;
  }
 
 
@@ -131,63 +119,61 @@ void DetectWhiteLines::whiteLineDetection()
 
 void DetectWhiteLines::imuTransform(const sensor_msgs::ImuConstPtr &imu)
 {
-  tf2Scalar arr[4] = {imu->orientation.x,imu->orientation.y,imu->orientation.z,imu->orientation.w};
-  quat = tf2::Quaternion(arr[0],arr[1],arr[2],arr[3]);
-  
-  try{
-    bodyFrame = buffer->lookupTransform("zed_center","base_link",ros::Time(0));
-  }
-  catch(tf2::TransformException &ex){
-     ROS_WARN("%s",ex.what());
-  }
+	if(valid)
+	{
+		tf2Scalar arr[4] = {imu->orientation.x,imu->orientation.y,imu->orientation.z,imu->orientation.w};
+		imuQuat = tf2::Quaternion(arr[0],arr[1],arr[2],arr[3]);
+	}
+
+	try{
+		bodyFrame = buffer->lookupTransform("zed_center","base_link",ros::Time(0));
+	} catch(tf2::TransformException &ex){
+		ROS_WARN("%s",ex.what());
+	}
   
 }
 
 DetectWhiteLines::DetectWhiteLines(const DetectWhiteLines & other )
 {
-  xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
-  outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0));
+	xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
+	outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0));
+	while(!initCamera());
 }
 
 void DetectWhiteLines::publish()
 {
   /*
-    nav_msgs::OccupancyGrid occ;
-    occ.header.seq = seqId++;
-    occ.header.frame_id = "test";
-    occ.header.stamp = ros::Time().now();
-    //MetaData
-    occ.info.map_load_time = ros::Time().now();
-    occ.info.resolution = XDIVISOR;
-    occ.info.width = WIDTH;
-    occ.info.height = HEIGHT;
-    //occ.info.origin = geometry_msgs::Pose(p, q);
-    occ.data.resize(xzMat.total());
-    memcpy(&(occ.data.front()), outputImage.data, xzMat.elemSize() * xzMat.total());
-    occ_pub.publish(occ);
+	nav_msgs::OccupancyGrid occ;
+	occ.header.seq = seqId++;
+	occ.header.frame_id = "test";
+	occ.header.stamp = ros::Time().now();
+	//MetaData
+	occ.info.map_load_time = ros::Time().now();
+	occ.info.resolution = XDIVISOR;
+	occ.info.width = WIDTH;
+	occ.info.height = HEIGHT;
+	//occ.info.origin = geometry_msgs::Pose(p, q);
+	occ.data.resize(xzMat.total());
+	memcpy(&(occ.data.front()), outputImage.data, xzMat.elemSize() * xzMat.total());
+	occ_pub.publish(occ);
   */
 }
 
 
 void DetectWhiteLines::detect(const ros::TimerEvent&)
 {
-  bool test = initCamera();
-  if(test)
-  {
-    bool value = loadPointCloud();
-    if(value)
-    {
-      convertXZ();
-      displayXZ(2);
-    
-      whiteLineDetection();
-      displayWL(2);
+	bool value = loadPointCloud();
+	if(value)
+	{	
+		convertXZ();
+		displayXZ(2);
 
-      publish();
-      
-    
-      zed.close();
-      clearXZ();
-    }
-  }
+		whiteLineDetection();
+		displayWL(2);
+
+		publish();
+
+
+		clearXZ();
+	}
 }
