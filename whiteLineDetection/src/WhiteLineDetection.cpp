@@ -1,5 +1,17 @@
 #include "WhiteLineDetection.h"
 #include <tf2/convert.h>
+/*
+ #include "opencv2/core.hpp"
+#include <opencv2/core/utility.hpp>
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/cudaimgproc.hpp"
+
+        const int64 start = getTickCount();
+        //process
+        const double timeSec = (getTickCount() - start) / getTickFrequency();
+        cout << "CPU Time : " << timeSec * 1000 << " ms" << endl;
+*/
 
 bool DetectWhiteLines::initCamera()
 {
@@ -109,6 +121,11 @@ void DetectWhiteLines::whiteLineDetection()
       //cv::resize(xzMat,xzMat,cv::Size(134,200),cv::INTER_LANCZOS4);
       cv::threshold(xzMat,xzMat,170,255,cv::THRESH_BINARY);
       vector<cv::Vec4i> lines;
+      
+      /*
+        Ptr<cuda::HoughSegmentDetector> hough = cuda::createHoughSegmentDetector(1.0f, (float) (CV_PI / 180.0f), 20, 10);
+        hough->detect(xz_mat, lines);
+       */
       cv::HoughLinesP(xzMat,lines,1,CV_PI/180,20,10,1);
       for( const auto& i : lines)
       {
