@@ -4,14 +4,18 @@
 #include "geometry_msgs/Pose.h"
 #include <string>
 
-#define gps_topic_name "TODO"
+#define gps_topic_name "/move_base/goal"
 #define costmap_topic_name "/move_base/local_costmap"
 
+// Costmap
 // Header
-int seq;
-int stamp_sec;
-int stamp_nsec;
-string frame_id;
+struct Header {
+  int seq;
+  int stamp_sec;
+  int stamp_nsec;
+  string frame_id;
+};
+Header costmapHeader;
 
 //Map meta data
 int load_time_sec;
@@ -26,27 +30,79 @@ struct Quaternion {
   float z;
   float w;
 };
-Quaternion orientation;
 
 struct Point {
   float x;
   float y;
   float z;
 };
-Point position;
+
+struct Vector3 {
+  float x;
+  float y;
+  float z;
+}
+
+struct Twist {
+  Vector3 linear;
+  Vector3 angular;
+}
+
+struct Pose {
+  Point position;
+  Quaternion orientation;
+};
+Pose costMapPose;
 
 int* data = new int[1];
 
-void gpsCallback(const std_msgs::String::ConstPtr& msg) {
-  
+// GPS
+Header gpsHeader;
+string child_frame_id;
+Pose gpsPose;
+float gpsPoseCovariance[36];
+Twist gpsTwist;
+float gpsTwistCovariance[36];
+
+void gpsCallback(const nav_msgs::Odometry::ConstPtr& msg) {
+  // Fill out header
+  this->gpsmapHeader.seq = msg->header.seq;
+  this->gpsmapHeader.stamp_sec = msg->header.stamp.sec;
+  this->gpsmapHeader.stamp_nsec = msg->header.stamp.nsec;
+  this->gpsmapHeader.frame_id = msg->header.frame_id;
+
+  this->child_frame_id = msg->child_frame_id;
+
+  this->gpsPose.position.x = msg->pose.pose.position.x;
+  this->gpsPose.position.y = msg->pose.pose.position.y;
+  this->gpsPose.position.z = msg->pose.pose.position.z;
+
+  this->gpsPose.orientation.x = msg->pose.orientation.x;
+  this->gpsPose.orientation.y = msg->pose.orientation.y;
+  this->gpsPose.orientation.z = msg->pose.orientation.z;
+  this->gpsPose.orientation.w = msg->pose.orientation.w;
+
+  for(int i = 0; i < 36; i++) {
+    this->gpsPoseCovariance[i] = msg->pose.covariance[i];
+    this->gpsTwistCovariance[i] = msg->twist.covariance[i];
+  }
+
+  this->gpsTwist.linear.x = msg->twist.linear.x;
+  this->gpsTwist.linear.y = msg->twist.linear.y;
+  this->gpsTwist.linear.z = msg->twist.linear.z;
+
+  this->gpsTwist.angular.x = msg->twist.angular.x;
+  this->gpsTwist.angular.y = msg->twist.angular.y;
+  this->gpsTwist.angular.z = msg->twist.angular.z;
+
 }
 
 void costmapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg) {
   // Fill out header
-  this->seq = msg->header.seq;
-  this->stamp_sec = msg->header.stamp.sec;
-  this->stamp_nsec = msg->header.stamp.nsec;
-  this->frame_id = msg->header.frame_id;
+  this->costmapHeader.seq = msg->header.seq;
+  this->costmapHeader.stamp_sec = msg->header.stamp.sec;
+  this->costmapHeader.stamp_nsec = msg->header.stamp.nsec;
+  this->costmapHeader.frame_id = msg->header.frame_id;
 
   // Fill out meta data
   this->load_time_sec = msg->info.map_load_time.sec;
@@ -55,21 +111,19 @@ void costmapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg) {
   this->width = msg->info.width;
   this->height = msg->info.height;
 
-  this->orientation.x = msg->info.origin.orientation.x;
-  this->orientation.y = msg->info.origin.orientation.y;
-  this->orientation.z = msg->info.origin.orientation.z;
-  this->orientation.w = msg->info.origin.orientation.w;
+  this->costMapPose.orientation.x = msg->info.origin.orientation.x;
+  this->costMapPose.orientation.y = msg->info.origin.orientation.y;
+  this->costMapPose.orientation.z = msg->info.origin.orientation.z;
+  this->costMapPose.orientation.w = msg->info.origin.orientation.w;
 
-  this->position.x = msg->info.origin.position.x;
-  this->position.y = msg->info.origin.position.y;
-  this->position.z = msg->info.origin.position.z;
+  this->costMapPose.position.x = msg->info.origin.position.x;
+  this->costMapPose.position.y = msg->info.origin.position.y;
+  this->costMapPose.position.z = msg->info.origin.position.z;
 
   delete[] this->data;
   this->data = new int[this->width * this->height];
-  for(int i = 0; i < this->height; i++) {
-    for(int j = 0; j < this->width; j++) {
-      *(this->data + (i * this->width) + j) = msg->data[(i * this->width) + j];
-    }
+  for(int i = 0; i < (this->width * this->height); i++) {
+    this->data[i] = msg->data[i];
   }
 
 }
