@@ -10,8 +10,8 @@ void make_reachable_collection()
 {
     while(!position.empty())
     {
-        position current = states.front();
-        position.pop_front();
+        position current = positions.front();
+        positions.pop_front();
         
         add_reachable_adjacent(current.x, current.y);
     }
@@ -25,55 +25,52 @@ void add_reachable_adjacent(unsigned int x, unsigned int y)
     
     if(cost_map(x + 1, y + 1) < 200)
     {
-        positions.push(position(x + 1, y + 1, x, y));
+        positions.push(position(x + 1, y + 1));
     }
     
     if(cost_map(x + 1, y) < 200)
     {
-        positions.push(position(x + 1, y, x, y));
+        positions.push(position(x + 1, y));
     }
     
     if(cost_map(x + 1, y - 1)  < 200)
     {
-        positions.push(position(x + 1, y - 1, x, y));
+        positions.push(position(x + 1, y - 1));
     }
     
     if(cost_map(x, y + 1)  < 200)
     {
-        positions.push(position(x, y + 1, x, y));
+        positions.push(position(x, y + 1));
     }
     
     if(cost_map(x, y - 1)  < 200)
     {
-        positions.push(position(x, y - 1, x, y));
+        positions.push(position(x, y - 1));
     }
     
     if(cost_map(x - 1, y + 1)  < 200)
     {
-        positions.push(position(x - 1, y + 1, x, y));
+        positions.push(position(x - 1, y + 1));
     }
     
     if(cost_map(x - 1, y)  < 200)
     {
-        positions.push(position(x - 1, y, x, y));
+        positions.push(position(x - 1, y));
     }
     
     if(cost_map(x - 1, y - 1)  < 200)
     {
-        positions.push(position(x - 1, y - 1, x, y));
+        positions.push(position(x - 1, y - 1));
     }
 }
 
 // Struct that contains a position, and the previous position
 struct position
 {
-    position(x_in, y_in, x_p, y_p): x(x_in), y(y_in), prev_x(x_p), prev_y(y_p)
+    position(x_in, y_in, x_p, y_p): x(x_in), y(y_in)
     {
     }
     
     unsigned int x;
     unsigned int y;
-    
-    unsigned int prev_x;
-    unsigned int prev_y;
 };
