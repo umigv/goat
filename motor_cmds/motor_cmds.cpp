@@ -16,6 +16,19 @@ const double kAngle_threshold = M_PI/8;
 //Magnitude of our linear velocity vector
 const double kLinear_magnitude = 10;
 
+class Robot{
+
+	public:
+		geometry_msgs::Point current_pos; 
+    	geometry_msgs::Quaternion current_orientation;
+    public:
+    	void get_pose_callback(geometry_msgs::Pose msg) {
+
+    		current_pos = msg.position;
+    		current_orientation = msg.orientation;
+    	}
+};
+
 double get_angle_to_target(const geometry_msgs::Point& target, geometry_msgs::Point& pos,
  geometry_msgs::Quaternion& orientation){
     tf::Vector3& heading = get_heading(orientation);
@@ -38,7 +51,7 @@ tf::Vector3 get_heading(const geometry_msgs::Quaternion& quaternion){
     return rotation_matrix*kInitial_facing;
 }
 
-template <typename t>
+template <typename T>
 int signum(T val){
     return (T(0) < val) - (val < T(0));
 }
@@ -48,7 +61,7 @@ void face_towards(const geometry_msgs::Point& target, geometry_msgs::Point& pos,
     do{
         double angle = get_angle_to_target(target, pos, orientation);
         geometry_msgs::Twist t;
-        t.angular.z = signum(angle)*kRotation_magnitude;
+        t.angular.z = signum<double>(angle)*kRotation_magnitude;
         pub.publish(t);
     } while(angle > kAngle_threshold || angle < -1*kAngle_threshold);
     pub.publish(geometry_msgs::Twist{}); //publish default twist to halt
@@ -69,15 +82,14 @@ int main(int argc, char** argv){
 
     std::vector<geometry_msgs::Point> path;//what A* passes to us, maybe not copy?
     auto target_it = path.begin();
-    geometry_msgs::Point current_pos; 
-    geometry_msgs::Quaternion current_orientation;
+
+    Robot my_bot;
+
+    //geometry_msgs::Point current_pos; 
+    //geometry_msgs::Quaternion current_orientation;
 
     // callback can not take params, it has to be in main unless created as a class member function
-    void callback_getPose = [&current_pos, &current_orientation](geometry_msgs::Pose msg) {
-        current_pos = msg.position;
-        current_orientation = msg.orientation;
-    };
-    ros::Subscriber sub = nh.subscribe("Pose", 1000, callback_getPose); // need to update topic name 
+    ros::Subscriber sub = nh.subscribe("Pose", 1000, &Robot::get_pose_callback, &my_bot); // need to update topic name 
 
     double time_step;
     if(!nh.getParam("time_step", time_step)){ //maybe make a default value?
@@ -89,9 +101,9 @@ int main(int argc, char** argv){
 
     auto callback = [&](const ros::TimerEvent& event){
             while(target_it != path.end()){
-                if(target_ahead(*target_it, current_pos, current_orientation)){
-                    face_towards(*target_it, current_pos, current_orientation, pub);
-                    step(current_orientation, pub); 
+                if(target_ahead(*target_it, my_bot.current_pos, my_bot.current_orientation)){
+                    face_towards(*target_it, my_bot.current_pos, my_bot.current_orientation, pub);
+                    step(my_bot.current_orientation, pub); 
                 }
                 else{
                     target_it++;
@@ -107,3 +119,4 @@ int main(int argc, char** argv){
         ros::spin();
     }
 }
+
