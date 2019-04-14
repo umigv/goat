@@ -3,7 +3,8 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Quaternion.h>
-#include<tf/tf.h>
+#include <tf/tf.h>
+#include <tf/Quaternion.h>
 #include <vector>
 #include <math.h>
 
@@ -36,11 +37,10 @@ class Robot{
     		current_orientation = msg.orientation;
     	}
         tf::Vector3 get_heading(){
-            //tf::Matrix3x3 rotation_matrix(current_orientation);
-            //return rotation_matrix*kInitial_facing;
-
-            //Use whats passed in
-        }   
+            tf:Quaternion q(current_orientation.x, current_orientation.y, current_orientation.z, current_orientation.w);
+            tf::Matrix3x3 rotation_matrix(q);
+            return rotation_matrix*kInitial_facing;
+        }
         double get_angle_to_target(const geometry_msgs::Point& target){
             tf::Vector3 heading = get_heading();
             tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} 

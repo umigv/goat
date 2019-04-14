@@ -6,7 +6,8 @@
     <license>BSD 3-Clause License</license>
 
     <url type="repository">https://github.com/umigv/goat</url>
-    <author>Gregory Meyer</author>
+    <author>Elton Lin</author>
+    <author>Sean Oliver</author>
 
     <buildtool_depend>catkin</buildtool_depend>
 
