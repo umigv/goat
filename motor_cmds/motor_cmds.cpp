@@ -16,13 +16,16 @@ const double kAngle_threshold = M_PI/8;
 //Magnitude of our linear velocity vector
 const double kLinear_magnitude = 10;
 
-double get_angle_to_target(const geometry_msgs::Point& target, geometry_msgs::Point& pos, geometry_msgs::Quaternion& orientation){
+double get_angle_to_target(const geometry_msgs::Point& target, geometry_msgs::Point& pos,
+ geometry_msgs::Quaternion& orientation){
     tf::Vector3& heading = get_heading(orientation);
-    tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} - tf::Vector3{pos.x, pos.y, pos.z};
+    tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} 
+        - tf::Vector3{pos.x, pos.y, pos.z};
     return heading.angle(target_heading);
 }
 
-bool target_ahead(const geometry_msgs::Point& target, geometry_msgs::Point& pos, geometry_msgs::Quaternion& orientation){
+bool target_ahead(const geometry_msgs::Point& target, geometry_msgs::Point& pos,
+ geometry_msgs::Quaternion& orientation){
     if(target == pos){
         return false;
     }
@@ -40,7 +43,8 @@ int signum(T val){
     return (T(0) < val) - (val < T(0));
 }
 
-void face_towards(const geometry_msgs::Point& target, geometry_msgs::Point& pos, geometry_msgs::Quaternion& orientation, ros::Publisher& pub){
+void face_towards(const geometry_msgs::Point& target, geometry_msgs::Point& pos,
+ geometry_msgs::Quaternion& orientation, ros::Publisher& pub){
     do{
         double angle = get_angle_to_target(target, pos, orientation);
         geometry_msgs::Twist t;
