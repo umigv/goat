@@ -2,6 +2,7 @@
 #include <priority_queue>
 #include <unordered_set>
 #include <cmath>
+#include <algorithm>
 
 class a_star
 {
@@ -34,6 +35,10 @@ public:
 
     // Calculates Euclidean distance between two positions
     double distance(position a, position b); // distance
+
+    // When given a position, calculates the minimum possible cost of traveling from
+    // said position to any of the adjacent spaces
+    unsigned int min_cost(position p); // min_cost
 
     // Comparator to take into account cost and distance of two positions
     class weight_compare {}; // comparator for priority queue

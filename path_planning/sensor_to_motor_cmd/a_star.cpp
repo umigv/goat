@@ -1,3 +1,5 @@
+#include "a_star.h"
+
 // Class for A* (a_star) algorithm
 // Takes in information from sensor readings
 // Outputs a vector of coordinate pairs outlining a path from the start position to the target position
@@ -113,6 +115,54 @@ double a_star::distance(position a, position b)
     return sqrt((x_diff * x_diff) + (y_diff * y_diff));
 }
 
+// When given a position, calculates the minimum possible cost of traveling from
+// said position to any of the adjacent spaces
+unsigned int a_star::min_cost(position p) {
+    unsigned int min = 0;
+    if (p.x > 0) {
+        if (costmap.at(p.x-1).at(p.y) < min) {
+            min = costmap.at(p.x-1).at(p.y);
+        }
+    }
+    if (p.x < costmap.size()) {
+        if (costmap.at(p.x+1).at(p.y) < min) {
+            min = costmap.at(p.x+1).at(p.y);
+        }
+    }
+    if (p.y > 0) {
+        if (costmap.at(p.x).at(p.y-1) < min) {
+            min = costmap.at(p.x).at(p.y-1);
+        }
+    }
+    if (p.y < costmap.at(0).size()) {
+        if (costmap.at(p.x).at(p.y+1) < min) {
+            min = costmap.at(p.x).at(p.y+1);
+        }
+    }
+    if (p.x > 0 && p.y > 0) {
+        if (costmap.at(p.x-1).at(p.y-1) < min) {
+            min = costmap.at(p.x-1).at(p.y-1);
+        }
+    }
+    if (p.x < costmap.size() && p.y < costmap.at(0).size()) {
+        if (costmap.at(p.x+1).at(p.y+1) < min) {
+            min = costmap.at(p.x+1).at(p.y+1);
+        }
+    }
+    if (p.x < costmap.size() && p.y > 0) {
+        if (costmap.at(p.x+1).at(p.y-1) < min) {
+            min = costmap.at(p.x+1).at(p.y-1);
+        }
+    }
+    if (p.x > 0 && p.y < costmap.at(0).size()) {
+        if (costmap.at(p.x-1).at(p.y+1) < min) {
+            min = costmap.at(p.x-1).at(p.y+1) < min;
+        }
+    }
+
+    return min;
+}
+
 // Struct that contains an (x, y) pair of coordinates
 struct a_star::position
 {
@@ -130,6 +180,10 @@ class a_star::weight_compare
 public:
     bool operator()(position a, position b)
     {
+        double d = min(min_cost(a), min_cost(b));
+        double weight_a = d * distance(a, target) + costmap.at(a.x).at(a.y);
+        double weight_b = d * distance(b, target) + costmap.at(b.x).at(b.y);
+        return weight_a < weight_b;
         // TO DO: calculate relative weights of positions according to chosen heuristic
         // and return true if weight(a) < weight(b) and false otherwise
     }
