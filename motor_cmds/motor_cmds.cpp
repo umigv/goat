@@ -6,28 +6,38 @@
 #include<tf/tf.h>
 #include <vector>
 
+//Vector pointing in initial starting direction
+const tf::Vector3 INITIAL_FACING{1,0,0};
+//Magnitude of our left/right rotation vector
+const double ROTATION_MAGNITUDE = 10;
+//Threshold for angle facing in radians
+const double ANGLE_THRESHOLD = 3.14/8;
+//Magnitude of our linear velocity vector
+const double LINEAR_MAGNITUDE = 10;
+
 tf::Vector3 get_heading(const geometry_msgs::Quaternion& quaternion){
-    tf::Matrix3x3 rotation_matrix{quaternion};
-    //TODO get heading vector from quaternion
-    return yaw;
+    return tf::Matrix3x3{quaternion} * INITIAL_FACING;
+}
+template <typename t>
+int signum(T val){
+    return (T(0) < val) - (val < T(0));
 }
 
 void face_towards(const geometry_msgs::Point& target, geometry_msgs::Point& pos, geometry_msgs::Quaternion& orientation, ros::Publisher& pub){
-    double angle = 100; // change to constant
-    while(angle > threshold || angle < -threshold){
-        tf::Vector3& heading = quaternion_to_yaw(orientation);
+    do{
+        tf::Vector3& heading = get_heading(orientation);
         tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} - tf::Vector3{pos.x, pos.y, pos.z};
-        angle = heading.angle(target_heading);
+        double angle = heading.angle(target_heading);
         geometry_msgs::Twist t;
-        t.angular.z = angle/scale; // change scale to value
+        t.angular.z = signum(angle)*ROTATION_MAGNITUDE;
         pub.publish(t);
-    }
-    pub.publish(geometry_msgs::Twist{});
+    } while(angle > threshold || angle < -1*threshold);
+    pub.publish(geometry_msgs::Twist{}); //publish default twist to halt
 }
 
 void step(geometry_msgs::Quaternion& orientation, ros::Publisher& pub){
     geometry_msgs::Twist t;
-    t.linear = get_heading(orientation);
+    t.linear = get_heading(orientation).normalized()*LINEAR_MAGNITUDE;
     pub.publish(t);
 }
 
