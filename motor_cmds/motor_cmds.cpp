@@ -16,6 +16,14 @@ const double kAngle_threshold = M_PI/8;
 //Magnitude of our linear velocity vector
 const double kLinear_magnitude = 10;
 
+int signum_double(double val){
+    return (0 < val) - (val < 0);
+}
+
+bool point_eq(const geometry_msgs::Point p1, const geometry_msgs::Point p2){
+    return p1.x == p2.x && p1.y == p2.y;
+}
+
 class Robot{
 
 	private:
@@ -28,27 +36,30 @@ class Robot{
     		current_orientation = msg.orientation;
     	}
         tf::Vector3 get_heading(){
-            tf::Matrix3x3 rotation_matrix{current_orientation};
-            return rotation_matrix*kInitial_facing;
+            //tf::Matrix3x3 rotation_matrix(current_orientation);
+            //return rotation_matrix*kInitial_facing;
+
+            //Use whats passed in
         }   
         double get_angle_to_target(const geometry_msgs::Point& target){
-            tf::Vector3& heading = get_heading();
+            tf::Vector3 heading = get_heading();
             tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} 
                 - tf::Vector3{current_pos.x, current_pos.y, current_pos.z};
             return heading.angle(target_heading);
         }
         bool target_ahead(const geometry_msgs::Point& target){
-            if(target == current_pos){
+            if(point_eq(target, current_pos)){
                 return false;
             }
             double angle = get_angle_to_target(target);
-            return (angle > 0 && angle < M_PI)
+            return (angle > 0 && angle < M_PI);
         }
         void face_towards(const geometry_msgs::Point& target, ros::Publisher& pub){
+            double angle;
             do{
-                double angle = get_angle_to_target(target);
+                angle = get_angle_to_target(target);
                 geometry_msgs::Twist t;
-                t.angular.z = signum<double>(angle)*kRotation_magnitude;
+                t.angular.z = signum_double(angle)*kRotation_magnitude;
                 pub.publish(t);
             } while(angle > kAngle_threshold || angle < -1*kAngle_threshold);
             pub.publish(geometry_msgs::Twist{}); //publish default twist to halt
@@ -61,11 +72,6 @@ class Robot{
             pub.publish(t);
         }  
 };
-
-template <typename T>
-int signum(T val){
-    return (T(0) < val) - (val < T(0));
-}
 
 int main(int argc, char** argv){
     ros::init(argc, argv, "motor_cmds"); //good node name?
