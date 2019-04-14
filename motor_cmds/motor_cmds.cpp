@@ -8,13 +8,13 @@
 #include <math.h>
 
 //Vector pointing in initial starting direction
-const tf::Vector3 INITIAL_FACING{1,0,0};
+const tf::Vector3 kInitial_facing{1,0,0};
 //Magnitude of our left/right rotation vector
-const double ROTATION_MAGNITUDE = 10;
+const double kRotation_magnitude = 10;
 //Threshold for angle facing in radians
-const double ANGLE_THRESHOLD = M_PI/8;
+const double kAngle_threshold = M_PI/8;
 //Magnitude of our linear velocity vector
-const double LINEAR_MAGNITUDE = 10;
+const double kLinear_magnitude = 10;
 
 double get_angle_to_target(const geometry_msgs::Point& target, geometry_msgs::Point& pos, geometry_msgs::Quaternion& orientation){
     tf::Vector3& heading = get_heading(orientation);
@@ -23,14 +23,18 @@ double get_angle_to_target(const geometry_msgs::Point& target, geometry_msgs::Po
 }
 
 bool target_ahead(const geometry_msgs::Point& target, geometry_msgs::Point& pos, geometry_msgs::Quaternion& orientation){
+    if(target == pos){
+        return false;
+    }
     double angle = get_angle_to_target(target, pos, orientation);
     return (angle > 0 && angle < M_PI)
 }
 
 tf::Vector3 get_heading(const geometry_msgs::Quaternion& quaternion){
     tf::Matrix3x3 rotation_matrix{quaternion};
-    return rotation_matrix*INITIAL_FACING;
+    return rotation_matrix*kInitial_facing;
 }
+
 template <typename t>
 int signum(T val){
     return (T(0) < val) - (val < T(0));
@@ -40,18 +44,17 @@ void face_towards(const geometry_msgs::Point& target, geometry_msgs::Point& pos,
     do{
         double angle = get_angle_to_target(target, pos, orientation);
         geometry_msgs::Twist t;
-        t.angular.z = signum(angle)*ROTATION_MAGNITUDE;
+        t.angular.z = signum(angle)*kRotation_magnitude;
         pub.publish(t);
-    } while(angle > ANGLE_THRESHOLD || angle < -1*ANGLE_THRESHOLD);
+    } while(angle > kAngle_threshold || angle < -1*kAngle_threshold);
     pub.publish(geometry_msgs::Twist{}); //publish default twist to halt
 }
 
 void step(geometry_msgs::Quaternion& orientation, ros::Publisher& pub){
     geometry_msgs::Twist t;
-    const tf::Vector3 norm_heading = get_heading(orientation).normalized()*LINEAR_MAGNITUDE;
+    const tf::Vector3 norm_heading = get_heading(orientation).normalized()*kLinear_magnitude;
     t.linear.x = norm_heading.getX();
     t.linear.y = norm_heading.getY();
-    //ignore z?
     pub.publish(t);
 }
 
@@ -62,8 +65,8 @@ int main(int argc, char** argv){
 
     std::vector<geometry_msgs::Point> path;//what A* passes to us, maybe not copy?
     auto target_it = path.begin();
-    geometry_msgs::Point current_pos; //current robot position passed from Sensors
-    geometry_msgs::Quaternion current_orientation; //also passed from Sensors
+    geometry_msgs::Point current_pos; 
+    geometry_msgs::Quaternion current_orientation;
 
     // callback can not take params, it has to be in main unless created as a class member function
     void callback_getPose = [&current_pos, &current_orientation](geometry_msgs::Pose msg) {
@@ -82,10 +85,9 @@ int main(int argc, char** argv){
 
     auto callback = [&](const ros::TimerEvent& event){
             while(target_it != path.end()){
-                if(target_ahead(*target_it, current_pos, current_orientation)){ //watch for edge case of on top of *it
+                if(target_ahead(*target_it, current_pos, current_orientation)){
                     face_towards(*target_it, current_pos, current_orientation, pub);
-                    step(current_orientation, pub);
-                    
+                    step(current_orientation, pub); 
                 }
                 else{
                     target_it++;
