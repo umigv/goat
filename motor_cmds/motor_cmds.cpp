@@ -3,21 +3,32 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Quaternion.h>
-#include <geometry_msgs/Pose2d.h>
 #include<tf/tf.h>
 #include <vector>
+#include <math.h>
 
 //Vector pointing in initial starting direction
 const tf::Vector3 INITIAL_FACING{1,0,0};
 //Magnitude of our left/right rotation vector
 const double ROTATION_MAGNITUDE = 10;
 //Threshold for angle facing in radians
-const double ANGLE_THRESHOLD = 3.14/8;
+const double ANGLE_THRESHOLD = M_PI/8;
 //Magnitude of our linear velocity vector
 const double LINEAR_MAGNITUDE = 10;
 
+double get_angle_to_target(const geometry_msgs::Point& target, geometry_msgs::Point& pos, geometry_msgs::Quaternion& orientation){
+    tf::Vector3& heading = get_heading(orientation);
+    tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} - tf::Vector3{pos.x, pos.y, pos.z};
+    return heading.angle(target_heading);
+}
+
+bool target_ahead(const geometry_msgs::Point& target, geometry_msgs::Point& pos, geometry_msgs::Quaternion& orientation){
+    double angle = get_angle_to_target(target, pos, orientation);
+    return (angle > 0 && angle < M_PI)
+}
+
 tf::Vector3 get_heading(const geometry_msgs::Quaternion& quaternion){
-    return tf::Matrix3x3{quaternion} * INITIAL_FACING;
+    return tf::Matrix3x3{quaternion}*INITIAL_FACING;
 }
 template <typename t>
 int signum(T val){
@@ -26,9 +37,7 @@ int signum(T val){
 
 void face_towards(const geometry_msgs::Point& target, geometry_msgs::Point& pos, geometry_msgs::Quaternion& orientation, ros::Publisher& pub){
     do{
-        tf::Vector3& heading = get_heading(orientation);
-        tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} - tf::Vector3{pos.x, pos.y, pos.z};
-        double angle = heading.angle(target_heading);
+        double angle = get_angle_to_target(target, pos, orientation);
         geometry_msgs::Twist t;
         t.angular.z = signum(angle)*ROTATION_MAGNITUDE;
         pub.publish(t);
