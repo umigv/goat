@@ -1,8 +1,22 @@
+#include <vector>
+#include <priority_queue>
+#include <unordered_set>
+#include <cmath>
+
 class a_star
 {
 public:
-    a_star(): start(position(0, 0)), target(position(0, 0))
+    // Struct that contains an (x, y) pair of coordinates
+    struct position {}; // position struct
+
+    a_star(position str, position tar, vector<vector<unsigned int>> &c_m):
+    start(str), target(tar), cost_map(c_m);
     {
+        // Add the starting position to the priority queue to begin
+        open_set.push(start);
+
+        // Resize the backtrack_map to the size of the costmap
+        backtrack_map.resize(cost_map.size(), vector<position>(cost_map[0].size()));
     }
 
     // Update the current target
@@ -21,9 +35,6 @@ public:
     // Calculates Euclidean distance between two positions
     double distance(position a, position b); // distance
 
-    // Struct that contains an (x, y) pair of coordinates
-    struct position {}; // position struct
-
     // Comparator to take into account cost and distance of two positions
     class weight_compare {}; // comparator for priority queue
 
@@ -35,7 +46,16 @@ private:
     position target;
 
     // priority queue to order current positions and eventually find the target
-    priority_queue<position, weight_compare> positions;
+    priority_queue<position, weight_compare> open_set;
+
+    // unordered set to store the positions that have already been visited
+    unordered_set<position> closed_set;
+
+    // cost map from input that stores the values of the costs of each location
+    vector<vector<unsigned int>> cost_map;
+
+    // data structure for backtracking
+    vector<vector<position>> backtrack_map;
 
     friend struct position;
     friend class weight_compare;
