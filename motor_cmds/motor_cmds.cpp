@@ -7,23 +7,23 @@
 #include<tf/tf.h>
 #include <vector>
 
+//Vector pointing in initial starting direction
+tf::Vector3 INITIAL_FACING{1,0,0};
+
 tf::Vector3 get_heading(const geometry_msgs::Quaternion& quaternion){
-    tf::Matrix3x3 rotation_matrix{quaternion};
-    //TODO get heading vector from quaternion
-    return yaw;
+    return tf::Matrix3x3{quaternion} * INITIAL_FACING;
 }
 
 void face_towards(const geometry_msgs::Point& target, geometry_msgs::Point& pos, geometry_msgs::Quaternion& orientation, ros::Publisher& pub){
-    double angle = 100; // change to constant
-    while(angle > threshold || angle < -threshold){
-        tf::Vector3& heading = quaternion_to_yaw(orientation);
+    do{
+        tf::Vector3& heading = get_heading(orientation);
         tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} - tf::Vector3{pos.x, pos.y, pos.z};
-        angle = heading.angle(target_heading);
+        double angle = heading.angle(target_heading);
         geometry_msgs::Twist t;
         t.angular.z = angle/scale; // change scale to value
         pub.publish(t);
-    }
-    pub.publish(geometry_msgs::Twist{});
+    } while(angle > threshold || angle < -threshold);
+    pub.publish(geometry_msgs::Twist{}); //publish default twist to halt
 }
 
 void step(geometry_msgs::Quaternion& orientation, ros::Publisher& pub){
