@@ -36,11 +36,18 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "motor_cmds"); //good node name?
     ros::nodeHandle nh("~");
     ros::Publisher pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
+    ros::Subsriber sub = nh.subscribe("Pose", 1000, callback_getPose); // need to update topic name 
 
     std::vector<geometry_msgs::Point> path = //what A* passes to us, maybe not copy?
     auto it target = path.begin();
-    geometry_msgs::Point current_pos = Pose.position //current robot position passed from Sensors
-    geometry_msgs::Quaternion current_orientation = Pose.orientation //also passed from Sensors
+    geometry_msgs::Point current_pos; //current robot position passed from Sensors
+    geometry_msgs::Quaternion current_orientation; //also passed from Sensors
+
+    // callback can not take params, it has to be in main unless created as a class member function
+    void callback_getPose(geometry_msgs::Pose msg) {
+        current_pos = msg.position;
+        current_orientation = msg.orientation;
+    }  
 
     double time_step;
     if(!nh.getParam("time_step", time_step)){ //maybe make a default value?
