@@ -18,7 +18,7 @@ const double kLinear_magnitude = 10;
 
 class Robot{
 
-	public:
+	private:
 		geometry_msgs::Point current_pos; 
     	geometry_msgs::Quaternion current_orientation;
     public:
@@ -27,52 +27,44 @@ class Robot{
     		current_pos = msg.position;
     		current_orientation = msg.orientation;
     	}
+        tf::Vector3 get_heading(){
+            tf::Matrix3x3 rotation_matrix{current_orientation};
+            return rotation_matrix*kInitial_facing;
+        }   
+        double get_angle_to_target(const geometry_msgs::Point& target){
+            tf::Vector3& heading = get_heading();
+            tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} 
+                - tf::Vector3{current_pos.x, current_pos.y, current_pos.z};
+            return heading.angle(target_heading);
+        }
+        bool target_ahead(const geometry_msgs::Point& target){
+            if(target == current_pos){
+                return false;
+            }
+            double angle = get_angle_to_target(target);
+            return (angle > 0 && angle < M_PI)
+        }
+        void face_towards(const geometry_msgs::Point& target, ros::Publisher& pub){
+            do{
+                double angle = get_angle_to_target(target);
+                geometry_msgs::Twist t;
+                t.angular.z = signum<double>(angle)*kRotation_magnitude;
+                pub.publish(t);
+            } while(angle > kAngle_threshold || angle < -1*kAngle_threshold);
+            pub.publish(geometry_msgs::Twist{}); //publish default twist to halt
+        }
+        void step(ros::Publisher& pub){
+            geometry_msgs::Twist t;
+            const tf::Vector3 norm_heading = get_heading().normalized()*kLinear_magnitude;
+            t.linear.x = norm_heading.getX();
+            t.linear.y = norm_heading.getY();
+            pub.publish(t);
+        }  
 };
-
-double get_angle_to_target(const geometry_msgs::Point& target, geometry_msgs::Point& pos,
- geometry_msgs::Quaternion& orientation){
-    tf::Vector3& heading = get_heading(orientation);
-    tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} 
-        - tf::Vector3{pos.x, pos.y, pos.z};
-    return heading.angle(target_heading);
-}
-
-bool target_ahead(const geometry_msgs::Point& target, geometry_msgs::Point& pos,
- geometry_msgs::Quaternion& orientation){
-    if(target == pos){
-        return false;
-    }
-    double angle = get_angle_to_target(target, pos, orientation);
-    return (angle > 0 && angle < M_PI)
-}
-
-tf::Vector3 get_heading(const geometry_msgs::Quaternion& quaternion){
-    tf::Matrix3x3 rotation_matrix{quaternion};
-    return rotation_matrix*kInitial_facing;
-}
 
 template <typename T>
 int signum(T val){
     return (T(0) < val) - (val < T(0));
-}
-
-void face_towards(const geometry_msgs::Point& target, geometry_msgs::Point& pos,
- geometry_msgs::Quaternion& orientation, ros::Publisher& pub){
-    do{
-        double angle = get_angle_to_target(target, pos, orientation);
-        geometry_msgs::Twist t;
-        t.angular.z = signum<double>(angle)*kRotation_magnitude;
-        pub.publish(t);
-    } while(angle > kAngle_threshold || angle < -1*kAngle_threshold);
-    pub.publish(geometry_msgs::Twist{}); //publish default twist to halt
-}
-
-void step(geometry_msgs::Quaternion& orientation, ros::Publisher& pub){
-    geometry_msgs::Twist t;
-    const tf::Vector3 norm_heading = get_heading(orientation).normalized()*kLinear_magnitude;
-    t.linear.x = norm_heading.getX();
-    t.linear.y = norm_heading.getY();
-    pub.publish(t);
 }
 
 int main(int argc, char** argv){
@@ -84,11 +76,6 @@ int main(int argc, char** argv){
     auto target_it = path.begin();
 
     Robot my_bot;
-
-    //geometry_msgs::Point current_pos; 
-    //geometry_msgs::Quaternion current_orientation;
-
-    // callback can not take params, it has to be in main unless created as a class member function
     ros::Subscriber sub = nh.subscribe("Pose", 1000, &Robot::get_pose_callback, &my_bot); // need to update topic name 
 
     double time_step;
@@ -100,23 +87,22 @@ int main(int argc, char** argv){
     }
 
     auto callback = [&](const ros::TimerEvent& event){
-            while(target_it != path.end()){
-                if(target_ahead(*target_it, my_bot.current_pos, my_bot.current_orientation)){
-                    face_towards(*target_it, my_bot.current_pos, my_bot.current_orientation, pub);
-                    step(my_bot.current_orientation, pub); 
-                }
-                else{
-                    target_it++;
-                }
+        while(target_it != path.end()){
+            if(my_bot.target_ahead(*target_it)){
+                my_bot.face_towards(*target_it, pub);
+                my_bot.step(pub); 
             }
-            ROS_INFO_STREAM("No More Targets Ahead");
-            ros::shutdown();
-            ros::waitForShutdown();
-            return 1;
-        };
+            else{
+                target_it++;
+            }
+        }
+        ROS_INFO_STREAM("No More Targets Ahead");
+        ros::shutdown();
+        ros::waitForShutdown();
+        return 1;
+    };
     while(ros::ok()){
         ros::Timer timer = nh.createTimer(ros::Duration(time_step), callback);
         ros::spin();
     }
 }
-
