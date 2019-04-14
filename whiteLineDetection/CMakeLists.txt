@@ -8,7 +8,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(CUDA 9 REQUIRED)
 find_package(ZED 2.7 REQUIRED)
-find_package(OpenCV 3 REQUIRED)
+find_package(OpenCV REQUIRED
+NO_MODULE 
+PATHS /usr/local
+NO_DEFAULT_PATH
+)
 
 find_package(catkin REQUIRED COMPONENTS roscpp image_transport cv_bridge tf2 tf2_ros)
 

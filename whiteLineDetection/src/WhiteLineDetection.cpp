@@ -1,17 +1,20 @@
 #include "WhiteLineDetection.h"
 #include <tf2/convert.h>
-/*
- #include "opencv2/core.hpp"
+
+#include "opencv2/core.hpp"
 #include <opencv2/core/utility.hpp>
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudaimgproc.hpp"
-
+//SWITCH FROM BGR TO BGRA
+/*
         const int64 start = getTickCount();
         //process
         const double timeSec = (getTickCount() - start) / getTickFrequency();
         cout << "CPU Time : " << timeSec * 1000 << " ms" << endl;
 */
+
+using namespace cv;
 
 bool DetectWhiteLines::initCamera()
 {
@@ -23,7 +26,7 @@ bool DetectWhiteLines::initCamera()
 	ERROR_CODE err = zed.open(initParameters);
 	if(err != SUCCESS)
 	{
-		cerr << err << "\n";
+		cerr << "Opening camera error: " << err << "\n";
 		zed.close();
 		return false;
 	}
@@ -43,7 +46,7 @@ bool DetectWhiteLines::loadPointCloud()
 
 
 
-bool DetectWhiteLines::isValidPoint(float & currVal, bool isX)
+bool DetectWhiteLines::isValidPoint(float currVal, bool isX)
 {
 	if(isX)
 		return (!isnan(currVal) && !isinf(currVal) && currVal < MAX_Y_VALUE \
@@ -59,14 +62,15 @@ void DetectWhiteLines::convertXZ()
 	valid = false;
 	sl::float4 currPoint;
 	tf2::Vector3 xyz;
-	for(size_t i = 0; i < HEIGHT; i+=2)
+	for(size_t i = 0; i < HEIGHT; i++)
 	{
-		for(size_t j = 0; j < WIDTH; j+=2)
+		for(size_t j = 0; j < WIDTH; j++)
 		{
 			point_cloud.getValue(i,j,&currPoint);
 			xyz[0] = currPoint.x;
 			xyz[1] = currPoint.y;
 			xyz[2] = currPoint.z;
+			/*
 			tf2::Transform transform(imuQuat);
          
 			tf2::Stamped<tf2::Transform> bodyTransform;
@@ -74,39 +78,36 @@ void DetectWhiteLines::convertXZ()
 
 			xyz = transform * xyz;
  
-			tf2::Vector3 newXYZ = {xyz[2],xyz[0],-1*xyz[1]};
 	  
 			newXYZ = bodyTransform * newXYZ;
-	    
-			int print = 0;
+*/
+			tf2::Vector3 newXYZ = {xyz[2],xyz[0],0};
 			
 			if(isValidPoint(newXYZ[1],Y))
 			{
 				newXYZ[1] = static_cast<int>((newXYZ[1] + SHIFTVAL ) / YDIVISOR);
-				print++;
 			}
+			else
+			{
+				continue;
+			}
+			
 			if(isValidPoint(newXYZ[0],X))
 			{
 				 newXYZ[0] = static_cast<int>((newXYZ[0]) / XDIVISOR);
-				 print++;
 			}
-
-			newXYZ[2] = 0;
-	  
-			if(print == 2)
+			else
 			{
-				Rgba color = unpack_float(currPoint.w);
-				uchar r = uchar(color.r);
-				uchar b = uchar(color.b);
-				uchar g = uchar(color.g);
-
-				cv::Vec3b val = xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0]));
-				val[0] = b;
-				val[1] = g;
-				val[2] = r;
-				xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0])) = {b,g,r};
+				continue;
 			}
-				print = 0;
+	  
+			Rgba color = unpack_float(currPoint.w);
+			uchar r = uchar(color.r);
+			uchar b = uchar(color.b);
+			uchar g = uchar(color.g);
+
+			cv::Vec3b val = xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0]));
+			xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0])) = val;
 		}
 	}
 	valid = true;
@@ -122,10 +123,10 @@ void DetectWhiteLines::whiteLineDetection()
       cv::threshold(xzMat,xzMat,170,255,cv::THRESH_BINARY);
       vector<cv::Vec4i> lines;
       
-      /*
-        Ptr<cuda::HoughSegmentDetector> hough = cuda::createHoughSegmentDetector(1.0f, (float) (CV_PI / 180.0f), 20, 10);
-        hough->detect(xz_mat, lines);
-       */
+      
+      //cv::Ptr<cv::cuda::HoughSegmentDetector> hough = cv::cuda::createHoughSegmentDetector(1.0f, (float) (CV_PI / 180.0f), 20, 10,1);
+      //hough->detect(xzMat, lines);
+       
       cv::HoughLinesP(xzMat,lines,1,CV_PI/180,20,10,1);
       for( const auto& i : lines)
       {
@@ -154,7 +155,7 @@ DetectWhiteLines::DetectWhiteLines(const DetectWhiteLines & other )
 {
 	xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
 	outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0));
-	while(!initCamera());
+	initCamera();
 }
 
 void DetectWhiteLines::publish()
@@ -179,18 +180,23 @@ void DetectWhiteLines::publish()
 
 void DetectWhiteLines::detect(const ros::TimerEvent&)
 {
+	const int64 start = getTickCount();
+    //process
+    
 	bool value = loadPointCloud();
 	if(value)
 	{	
 		convertXZ();
 		displayXZ(2);
-
+const double timeSec = (getTickCount() - start) / getTickFrequency();
+    cout << "CPU Time : " << timeSec * 1000 << " ms" << endl;
 		whiteLineDetection();
 		displayWL(2);
+		
 
 		publish();
 
-
 		clearXZ();
 	}
+	
 }

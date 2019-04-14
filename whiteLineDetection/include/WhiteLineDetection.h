@@ -28,8 +28,7 @@ public:
 		outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0));
 		occ_pub = node.advertise<nav_msgs::OccupancyGrid>("nav_msgs/OccupancyGrid", 50);
 		seqId = 0;
-		while(!initCamera());
-
+		initCamera();
   }
   
   DetectWhiteLines(const DetectWhiteLines & other);
@@ -38,6 +37,8 @@ public:
 
   void imuTransform(const sensor_msgs::ImuConstPtr &imu);
   void detect(const ros::TimerEvent&);
+  void loadBuffer(tf2_ros::Buffer * b) { buffer = b;}
+
 
 private:
   const int MAX_Y_VALUE = 8;
@@ -70,9 +71,8 @@ private:
   void convertXZ();
   void run();
   void transformIMU(int & x, int & z);
-  void loadBuffer(tf2_ros::Buffer * b) { buffer = b;}
   void whiteLineDetection();
-  bool isValidPoint(float & currVal, bool isX);
+  bool isValidPoint(float currVal, bool isX);
   void publish();
   
   struct Rgba
@@ -107,5 +107,5 @@ private:
 		cv::waitKey(time);
   }
 
-  void clearXZ()  xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
+  void clearXZ() { xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));}
 };
