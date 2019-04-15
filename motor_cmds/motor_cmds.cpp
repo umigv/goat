@@ -7,15 +7,6 @@
 #include <vector>
 #include <math.h>
 
-//Vector pointing in initial starting direction
-const tf::Vector3 kInitial_heading{1,0,0};
-//Magnitude of our left/right rotation vector
-const double kRotation_magnitude = 10;
-//Threshold for angle facing in radians
-const double kAngle_threshold = M_PI/8;
-//Magnitude of our linear velocity vector
-const double kLinear_magnitude = 10;
-
 int signum_double(double val){
     return (0 < val) - (val < 0);
 }
@@ -37,6 +28,18 @@ class Robot{
         double kAngle_threshold;
         //Magnitude of our linear velocity vector
         double kLinear_magnitude;
+
+        tf::Vector3 get_heading(){
+            tf::Quaternion q(current_orientation.x, current_orientation.y, current_orientation.z, current_orientation.w);
+            tf::Matrix3x3 rotation_matrix(q);
+            return rotation_matrix*kInitial_heading;
+        }
+        double get_angle_to_target(const geometry_msgs::Point& target){
+            tf::Vector3 heading = get_heading();
+            tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} 
+                - tf::Vector3{current_pos.x, current_pos.y, current_pos.z};
+            return heading.angle(target_heading);
+        }
     public:
         Robot(ros::NodeHandle& nh){
             double initial_heading_x;
@@ -62,17 +65,6 @@ class Robot{
     		current_pos = msg.position;
     		current_orientation = msg.orientation;
     	}
-        tf::Vector3 get_heading(){
-            tf::Quaternion q(current_orientation.x, current_orientation.y, current_orientation.z, current_orientation.w);
-            tf::Matrix3x3 rotation_matrix(q);
-            return rotation_matrix*kInitial_heading;
-        }
-        double get_angle_to_target(const geometry_msgs::Point& target){
-            tf::Vector3 heading = get_heading();
-            tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} 
-                - tf::Vector3{current_pos.x, current_pos.y, current_pos.z};
-            return heading.angle(target_heading);
-        }
         bool target_ahead(const geometry_msgs::Point& target){
             if(point_eq(target, current_pos)){
                 return false;
@@ -96,11 +88,11 @@ class Robot{
             t.linear.x = norm_heading.getX();
             t.linear.y = norm_heading.getY();
             pub.publish(t);
-        }  
+        }
 };
 
 int main(int argc, char** argv){
-    ros::init(argc, argv, "motor_cmds"); //good node name?
+    ros::init(argc, argv, "motor_cmds");
     ros::NodeHandle nh("~");
     ros::Publisher pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
 
@@ -124,7 +116,6 @@ int main(int argc, char** argv){
         ROS_INFO_STREAM("No More Targets Ahead");
         ros::shutdown();
         ros::waitForShutdown();
-        return 1;
     };
     while(ros::ok()){
         ros::Timer timer = nh.createTimer(ros::Duration(time_step), callback);
