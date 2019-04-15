@@ -95,7 +95,7 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "motor_cmds");
     ros::NodeHandle nh_pub;
     ros::NodeHandle nh_priv("~");
-    ros::Publisher pub = nh_priv.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
+    ros::Publisher pub = nh_pub.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
     geometry_msgs::Point p1;
     geometry_msgs::Point p2;
     p2.x = 10;
@@ -106,8 +106,8 @@ int main(int argc, char** argv){
     std::vector<geometry_msgs::Point> path{p1, p2, p3};
     auto target_it = path.begin();
 
-    Robot my_bot{nh_pub};
-    ros::Subscriber sub = nh_priv.subscribe("Pose", 1000, &Robot::get_pose_callback, &my_bot); // need to update topic name 
+    Robot my_bot{nh_priv};
+    ros::Subscriber sub = nh_pub.subscribe("Pose", 1000, &Robot::get_pose_callback, &my_bot); // need to update topic name 
 
     const double time_step = nh_priv.param("time_step", 0.05);
     auto callback = [&](const ros::TimerEvent& event){
