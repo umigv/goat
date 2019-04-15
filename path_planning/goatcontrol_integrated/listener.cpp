@@ -4,7 +4,7 @@
 #include "nav_msgs/Odometry.h"
 #include "sensor_msgs/Imu.h"
 #include <string>
-#include "a_star.h"
+#include "goatcontrol.h"
 
 #define gps_topic_name "/odometry/filtered"
 #define imu_topic_name "/imu/data_jitter_filtered"
@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 
 	ros::NodeHandle n;
 
-	GoatControl listener;
+	GoatControl listener = GoatControl();
 
 	ros::Subscriber gps_sub = n.subscribe(gps_topic_name, 1000, &GoatControl::gpsCallback, &listener);
 	ros::Subscriber costmap_sub = n.subscribe(costmap_topic_name, 1000, &GoatControl::costmapCallback, &listener);
@@ -41,10 +41,10 @@ int main(int argc, char **argv)
 	while(!foundtarget)
 	{
 	    // Create a position object that holds the starting position
-	    GoatControl::position start(start_x, start_y);
+	    position start(start_x, start_y);
 
 	    // Create a position object that holds the position of the target
-	    GoatControl::position target(gps_target_x, gps_target_y);
+	    position target(gps_target_x, gps_target_y);
 
 	    // Make a new a_star object
 	    //GoatControl pathfinder = a_star(vector<vector<unsigned int>> cost_map_in);
@@ -53,12 +53,12 @@ int main(int argc, char **argv)
 	    //foundtarget = pathfinder.make_reachable_collection();
 	} // while
 
-	vector<GoatControl::position> solution_path;
+	//vector<position> solution_path;
 
 	// Backtrack from the target and add positions to solution path
 	// Solution path is given in reverse order, starting from the goal 
 	// and listing the previous position until it reaches the start
-	listener.backtracker(solution_path);
+	//listener.backtracker(solution_path);
 
 	ros::spin();
 

@@ -1,17 +1,14 @@
-#include "a_star.h"
+#include "goatcontrol.h"
+
 using namespace std;
-// Class for A* (a_star) algorithm
+
+// Class for A* algorithm
 // Takes in information from sensor readings
 // Outputs a vector of coordinate pairs outlining a path from the start position to the target position
 
 // TO DO: update this GoatControl constructor to reflect its use in the listener node
-GoatControl::GoatControl(GoatControl::position str, GoatControl::position tar, vector<vector<unsigned int>> &c_m): start(str), target(tar), cost_map(c_m)
+GoatControl::GoatControl()
 {
-    // Add the starting position to the priority queue to begin
-    open_set.push(start);
-
-    // Resize the backtrack_map to the size of the costmap
-    backtrack_map.resize(cost_map.size(), vector<GoatControl::position>(cost_map[0].size()));
 }
 
 // Breadth first search 
