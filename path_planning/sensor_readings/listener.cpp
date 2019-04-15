@@ -1,11 +1,14 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "nav_msgs/OccupancyGrid.h"
-#include "geometry_msgs/Pose.h"
+#include "nav_msgs/Odometry.h"
+#include "sensor_msgs/Imu"
 #include <string>
 
-#define gps_topic_name "/move_base/goal"
-#define costmap_topic_name "/move_base/local_costmap"
+#define gps_topic_name "/odometry/filtered"
+#define imu_topic_name "/imu/data_jitter_filtered"
+#define costmap_topic_name "/move_base/local_costmap/costmap"
+#define map_topic_name "/map"
 
 // Costmap
 // Header
