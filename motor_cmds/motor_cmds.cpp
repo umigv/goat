@@ -4,7 +4,6 @@
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Quaternion.h>
 #include <tf/tf.h>
-#include <tf/Quaternion.h>
 #include <vector>
 #include <math.h>
 
@@ -26,7 +25,6 @@ bool point_eq(const geometry_msgs::Point p1, const geometry_msgs::Point p2){
 }
 
 class Robot{
-
 	private:
 		geometry_msgs::Point current_pos; 
     	geometry_msgs::Quaternion current_orientation;
@@ -37,7 +35,7 @@ class Robot{
     		current_orientation = msg.orientation;
     	}
         tf::Vector3 get_heading(){
-            tf:Quaternion q(current_orientation.x, current_orientation.y, current_orientation.z, current_orientation.w);
+            tf::Quaternion q(current_orientation.x, current_orientation.y, current_orientation.z, current_orientation.w);
             tf::Matrix3x3 rotation_matrix(q);
             return rotation_matrix*kInitial_facing;
         }
@@ -84,14 +82,7 @@ int main(int argc, char** argv){
     Robot my_bot;
     ros::Subscriber sub = nh.subscribe("Pose", 1000, &Robot::get_pose_callback, &my_bot); // need to update topic name 
 
-    double time_step;
-    if(!nh.getParam("time_step", time_step)){ //maybe make a default value?
-        ROS_FATAL_STREAM("Missing Parameter: time_step");
-        ros::shutdown();
-        ros::waitForShutdown();
-        return 1;
-    }
-
+    const double time_step = nh.param("time_step", 0.05);
     auto callback = [&](const ros::TimerEvent& event){
         while(target_it != path.end()){
             if(my_bot.target_ahead(*target_it)){
