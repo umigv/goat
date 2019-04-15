@@ -8,7 +8,7 @@
 #include <math.h>
 
 //Vector pointing in initial starting direction
-const tf::Vector3 kInitial_facing{1,0,0};
+const tf::Vector3 kInitial_heading{1,0,0};
 //Magnitude of our left/right rotation vector
 const double kRotation_magnitude = 10;
 //Threshold for angle facing in radians
@@ -28,7 +28,35 @@ class Robot{
 	private:
 		geometry_msgs::Point current_pos; 
     	geometry_msgs::Quaternion current_orientation;
+
+        //Vector pointing in initial starting direction
+        tf::Vector3 kInitial_heading;
+        //Magnitude of our left/right rotation vector
+        double kRotation_magnitude;
+        //Threshold for angle facing in radians
+        double kAngle_threshold;
+        //Magnitude of our linear velocity vector
+        double kLinear_magnitude;
     public:
+        Robot(ros::NodeHandle& nh){
+            double initial_heading_x;
+            if(!nh.getParam("initial_x", initial_heading_x)){
+                ROS_FATAL_STREAM("Missing Parameter: initial_x");
+                ros::shutdown();
+                ros::waitForShutdown();
+            }
+            double initial_heading_y;
+            if(!nh.getParam("initial_y", initial_heading_y)){
+                ROS_FATAL_STREAM("Missing Parameter: initial_y");
+                ros::shutdown();
+                ros::waitForShutdown();
+            }
+            double initial_heading_z = nh.param("initial_z", 0);
+            kInitial_heading = tf::Vector3{initial_heading_x, initial_heading_y, initial_heading_z};
+            kRotation_magnitude = nh.param("rotation_magnitude", 10);
+            kAngle_threshold = nh.param("angle_threshold", M_PI/16);
+            kLinear_magnitude = nh.param("linear_magnitude", 10);
+        }
     	void get_pose_callback(geometry_msgs::Pose msg) {
 
     		current_pos = msg.position;
@@ -37,7 +65,7 @@ class Robot{
         tf::Vector3 get_heading(){
             tf::Quaternion q(current_orientation.x, current_orientation.y, current_orientation.z, current_orientation.w);
             tf::Matrix3x3 rotation_matrix(q);
-            return rotation_matrix*kInitial_facing;
+            return rotation_matrix*kInitial_heading;
         }
         double get_angle_to_target(const geometry_msgs::Point& target){
             tf::Vector3 heading = get_heading();
@@ -79,7 +107,7 @@ int main(int argc, char** argv){
     std::vector<geometry_msgs::Point> path;//what A* passes to us, maybe not copy?
     auto target_it = path.begin();
 
-    Robot my_bot;
+    Robot my_bot{nh};
     ros::Subscriber sub = nh.subscribe("Pose", 1000, &Robot::get_pose_callback, &my_bot); // need to update topic name 
 
     const double time_step = nh.param("time_step", 0.05);
@@ -87,7 +115,7 @@ int main(int argc, char** argv){
         while(target_it != path.end()){
             if(my_bot.target_ahead(*target_it)){
                 my_bot.face_towards(*target_it, pub);
-                my_bot.step(pub); 
+                my_bot.step(pub);
             }
             else{
                 target_it++;
