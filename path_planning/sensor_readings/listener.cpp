@@ -4,6 +4,7 @@
 #include "nav_msgs/Odometry.h"
 #include "sensor_msgs/Imu.h"
 #include <string>
+#include "a_star.cpp"
 
 #define gps_topic_name "/odometry/filtered"
 #define imu_topic_name "/imu/data_jitter_filtered"
@@ -12,139 +13,54 @@
 
 using namespace std;
 
-// Costmap
-// Header
-class goat_control {
-public:
-	struct Header {
-	  int seq;
-	  int stamp_sec;
-	  int stamp_nsec;
-	  string frame_id;
-	};
-	Header costmapHeader;
+int main(int argc, char **argv)
+{
+	ros::init(argc, argv, "listener");
 
-	//Map meta data
-	int load_time_sec;
-	int load_time_nsec;
-	float resolution;
-	int width;
-	int height;
+	ros::NodeHandle n;
 
-	struct Quaternion {
-	  float x;
-	  float y;
-	  float z;
-	  float w;
-	};
+	GoatControl listener;
 
-	struct Point {
-	  float x;
-	  float y;
-	  float z;
-	};
+	ros::Subscriber gps_sub = n.subscribe(gps_topic_name, 1000, &GoatControl::gpsCallback, &listener);
+	ros::Subscriber costmap_sub = n.subscribe(costmap_topic_name, 1000, &GoatControl::costmapCallback, &listener);
 
-	struct Vector3 {
-	  float x;
-	  float y;
-	  float z;
-	};
+	// Placeholders for the coordinates of the starting position
+	unsigned int start_x = 0;
+	unsigned int start_y = 0;
 
-	struct Twist {
-	  Vector3 linear;
-	  Vector3 angular;
-	};
+	// Placeholders for gps coordinates for the target
+	unsigned int gps_target_x = 0;
+	unsigned int gps_target_y = 0;
 
-	struct Pose {
-	  Point position;
-	  Quaternion orientation;
-	};
-	Pose costMapPose;
+	bool foundtarget = false;
 
-	int* data = new int[1];
+	// TO DO: figure out whether this loop should be done in a callback function
+	// and how the timing of the callback functions and this control loop will interact
+	
+	// Loop while a solution isn't found
+	while(!foundtarget)
+	{
+	    // Create a position object that holds the starting position
+	    GoatControl::position start(start_x, start_y);
 
-	// GPS
-	Header gpsHeader;
-	Pose gpsPose;
-	float gpsPoseCovariance[36];
-	Twist gpsTwist;
-	float gpsTwistCovariance[36];
+	    // Create a position object that holds the position of the target
+	    GoatControl::position target(gps_target_x, gps_target_y);
 
-	void gpsCallback(const nav_msgs::Odometry::ConstPtr& msg) {
-	  // Fill out header
-	  this->gpsHeader.seq = msg->header.seq;
-	  this->gpsHeader.stamp_sec = msg->header.stamp.sec;
-	  this->gpsHeader.stamp_nsec = msg->header.stamp.nsec;
-	  this->gpsHeader.frame_id = msg->header.frame_id;
+	    // Make a new a_star object
+	    //GoatControl pathfinder = a_star(vector<vector<unsigned int>> cost_map_in);
 
-	  this->gpsPose.position.x = msg->pose.pose.position.x;
-	  this->gpsPose.position.y = msg->pose.pose.position.y;
-	  this->gpsPose.position.z = msg->pose.pose.position.z;
+	    // Attempt to find a solution
+	    //foundtarget = pathfinder.make_reachable_collection();
+	} // while
 
-	  this->gpsPose.orientation.x = msg->pose.pose.orientation.x;
-	  this->gpsPose.orientation.y = msg->pose.pose.orientation.y;
-	  this->gpsPose.orientation.z = msg->pose.pose.orientation.z;
-	  this->gpsPose.orientation.w = msg->pose.pose.orientation.w;
+	vector<GoatControl::position> solution_path;
 
-	  for(int i = 0; i < 36; i++) {
-	    this->gpsPoseCovariance[i] = msg->pose.covariance[i];
-	    this->gpsTwistCovariance[i] = msg->twist.covariance[i];
-	  }
+	// Backtrack from the target and add positions to solution path
+	// Solution path is given in reverse order, starting from the goal 
+	// and listing the previous position until it reaches the start
+	listener.backtracker(solution_path);
 
-	  this->gpsTwist.linear.x = msg->twist.twist.linear.x;
-	  this->gpsTwist.linear.y = msg->twist.twist.linear.y;
-	  this->gpsTwist.linear.z = msg->twist.twist.linear.z;
+	ros::spin();
 
-	  this->gpsTwist.angular.x = msg->twist.twist.angular.x;
-	  this->gpsTwist.angular.y = msg->twist.twist.angular.y;
-	  this->gpsTwist.angular.z = msg->twist.twist.angular.z;
-
-	}
-
-	void costmapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg) {
-	  // Fill out header
-	  this->costmapHeader.seq = msg->header.seq;
-	  this->costmapHeader.stamp_sec = msg->header.stamp.sec;
-	  this->costmapHeader.stamp_nsec = msg->header.stamp.nsec;
-	  this->costmapHeader.frame_id = msg->header.frame_id;
-
-	  // Fill out meta data
-	  this->load_time_sec = msg->info.map_load_time.sec;
-	  this->load_time_nsec = msg->info.map_load_time.nsec;
-	  this->resolution = msg->info.resolution;
-	  this->width = msg->info.width;
-	  this->height = msg->info.height;
-
-	  this->costMapPose.orientation.x = msg->info.origin.orientation.x;
-	  this->costMapPose.orientation.y = msg->info.origin.orientation.y;
-	  this->costMapPose.orientation.z = msg->info.origin.orientation.z;
-	  this->costMapPose.orientation.w = msg->info.origin.orientation.w;
-
-	  this->costMapPose.position.x = msg->info.origin.position.x;
-	  this->costMapPose.position.y = msg->info.origin.position.y;
-	  this->costMapPose.position.z = msg->info.origin.position.z;
-
-	  delete[] this->data;
-	  this->data = new int[this->width * this->height];
-	  for(int i = 0; i < (this->width * this->height); i++) {
-	    this->data[i] = msg->data[i];
-	  }
-
-	}
-};
-
-int main(int argc, char **argv) {
-
-  ros::init(argc, argv, "listener");
-
-  ros::NodeHandle n;
-
-	goat_control listener;
-
-  ros::Subscriber gps_sub = n.subscribe(gps_topic_name, 1000, &goat_control::gpsCallback, &listener);
-  ros::Subscriber costmap_sub = n.subscribe(costmap_topic_name, 1000, &goat_control::costmapCallback, &listener);
-
-  ros::spin();
-
-  return 0;
+	return 0;
 }
