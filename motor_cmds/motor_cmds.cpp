@@ -95,8 +95,14 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "motor_cmds");
     ros::NodeHandle nh("~");
     ros::Publisher pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
-
-    std::vector<geometry_msgs::Point> path;//what A* passes to us, maybe not copy?
+    geometry_msgs::Point p1;
+    geometry_msgs::Point p2;
+    p2.x = 10;
+    p2.y = 10;
+    geometry_msgs::Point p3;
+    p3.x = 20;
+    p3.y = 15;
+    std::vector<geometry_msgs::Point> path{p1, p2, p3};
     auto target_it = path.begin();
 
     Robot my_bot{nh};
