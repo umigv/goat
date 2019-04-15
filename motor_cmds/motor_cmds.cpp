@@ -93,7 +93,7 @@ class Robot{
 
 int main(int argc, char** argv){
     ros::init(argc, argv, "motor_cmds");
-    ros::NodeHandle nh("~");
+    ros::NodeHandle nh;
     ros::Publisher pub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
     geometry_msgs::Point p1;
     geometry_msgs::Point p2;
