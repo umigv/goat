@@ -1,4 +1,4 @@
-#include "WhiteLineDetection.h"
+#include "WhiteLineDetection.hpp"
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "sensor_msgs/Imu.h"
@@ -6,7 +6,6 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <tf2_ros/buffer.h>
 
-//#include <geometry_msgs/Quaternion>
 
 
 int main(int argc, char ** argv)

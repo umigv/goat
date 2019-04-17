@@ -1,6 +1,11 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.9)
 
-project(whiteLineDetection)
+project(whiteLineDetection LANGUAGES CXX CUDA)
+
+set(CMAKE_CUDA_STANDARD 14)
+set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+set(CMAKE_CUDA_EXTENSIONS OFF)
+
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,10 +23,10 @@ find_package(catkin REQUIRED COMPONENTS roscpp image_transport cv_bridge tf2 tf2
 
 catkin_package(CATKIN_DEPENDS roscpp)
 
-include_directories(include ${catkin_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${ZED_INCLUDE_DIRS}
+include_directories(include  ${catkin_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${ZED_INCLUDE_DIRS}
                                         ${OpenCV_INCLUDE_DIRS})
 
-add_executable(whiteLineDetection src/main.cpp src/WhiteLineDetection.cpp)
+add_executable(whiteLineDetection src/main.cpp src/WhiteLineDetection.cpp src/vector.cu src/matrix.cu src/err.cu src/transform.cu )
 target_link_libraries(whiteLineDetection ${catkin_LIBRARIES} ${CUDA_LIBRARIES} ${ZED_LIBRARIES}
                                           ${OpenCV_LIBRARIES})
 
