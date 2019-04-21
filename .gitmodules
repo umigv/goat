@@ -1,0 +1,3 @@
+[submodule "whiteLineDetection/simt_tf"]
+	path = whiteLineDetection/simt_tf
+	url = https://github.com/Gregory-Meyer/simt_tf.git

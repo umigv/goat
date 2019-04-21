@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
 
+message(STATUS "${CMAKE_PREFIX_PATH}" )
+
 project(whiteLineDetection LANGUAGES CXX CUDA)
 
 set(CMAKE_CUDA_STANDARD 14)
@@ -19,16 +21,18 @@ PATHS /usr/local
 NO_DEFAULT_PATH
 )
 
-find_package(catkin REQUIRED COMPONENTS roscpp image_transport cv_bridge tf2 tf2_ros)
+find_package(SimtTf REQUIRED)
+
+find_package(catkin REQUIRED COMPONENTS roscpp cv_bridge tf2 tf2_ros)
 
 catkin_package(CATKIN_DEPENDS roscpp)
 
 include_directories(include  ${catkin_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${ZED_INCLUDE_DIRS}
                                         ${OpenCV_INCLUDE_DIRS})
 
-add_executable(whiteLineDetection src/main.cpp src/WhiteLineDetection.cpp src/vector.cu src/matrix.cu src/err.cu src/transform.cu )
+add_executable(whiteLineDetection src/main.cpp src/WhiteLineDetection.cpp )
 target_link_libraries(whiteLineDetection ${catkin_LIBRARIES} ${CUDA_LIBRARIES} ${ZED_LIBRARIES}
-                                          ${OpenCV_LIBRARIES})
+                                          ${OpenCV_LIBRARIES} SimtTf::SimtTf)
 
 
 
