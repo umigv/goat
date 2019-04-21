@@ -51,11 +51,11 @@ struct position_comparator
 class GoatControl
 {
 public:
-	// TO DO: update this GoatControl constructor to reflect its use in the listener node
-	GoatControl();
+    // TO DO: update this GoatControl constructor to reflect its use in the listener node
+    GoatControl();
 
     // Breadth first search 
-    bool make_reachable_collection(std::priority_queue<position, std::vector<position>, weight_compare> &open_set);
+    bool make_reachable_collection();
 
     // Starts at target and backtracks, adding information to the solution path
     // Then once it hits the starting position, stops and reverses the solution path vector
@@ -72,6 +72,19 @@ public:
 
     void costmapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg);
 
+    class weight_compare
+    {
+	public:
+	// pathfinding heuristic as written and described in [insert stanford article source here]
+	bool operator()(const position a, const position b)
+	{
+	double d = std::min(min_cost(a), min_cost(b));
+	double weight_a = d * distance(a, target) + cost_map[a.x][a.y];
+	double weight_b = d * distance(b, target) + cost_map[b.x][b.y];
+	return weight_a < weight_b;
+	}
+    }; // comparator for priority queue
+
     friend struct position;
     friend class weight_compare;
 
@@ -82,6 +95,9 @@ private:
 
     // create a position object that holds the position of the target
     position target;
+
+    // priority queue to order current positions and eventually find the target
+    std::priority_queue<position, std::vector<position>, weight_compare> open_set;
 
     // unordered set to store the positions that have already been visited
     std::unordered_set<position, position_hasher, position_comparator> closed_set;

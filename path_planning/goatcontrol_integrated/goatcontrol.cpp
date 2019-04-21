@@ -6,22 +6,6 @@ using namespace std;
 // Takes in information from sensor readings
 // Outputs a vector of coordinate pairs outlining a path from the start position to the target position
 
-class weight_compare
-{
-GoatControl gc;
-friend class GoatControl;
-
-public:
-	weight_compare(GoatControl gc): gc(gc) {}
-	// pathfinding heuristic as written and described in [insert stanford article source here]
-	bool operator()(const position a, const position b)
-	{
-	double d = std::min(gc.min_cost(a), gc.min_cost(b));
-	double weight_a = d * gc.distance(a, gc.target) + gc.cost_map[a.x][a.y];
-	double weight_b = d * gc.distance(b, gc.target) + gc.cost_map[b.x][b.y];
-	return weight_a < weight_b;
-	}
-}; // comparator for priority queue
 
 // TO DO: update this GoatControl constructor to reflect its use in the listener node
 GoatControl::GoatControl()
@@ -29,7 +13,7 @@ GoatControl::GoatControl()
 }
 
 // Breadth first search 
-bool GoatControl::make_reachable_collection(std::priority_queue<position, std::vector<position>, weight_compare> &open_set)
+bool GoatControl::make_reachable_collection()
 {
     while(!open_set.empty())
     {
@@ -47,7 +31,8 @@ bool GoatControl::make_reachable_collection(std::priority_queue<position, std::v
         // else add all adjacent states to the queue
 	unsigned int x = current.x;
 	unsigned int y = current.y;
-	position northeast = position(x + 1, y + 1);
+
+    position northeast = position(x + 1, y + 1);
     if(cost_map[x + 1][y + 1] < 200 && closed_set.find(northeast) == closed_set.end())
     {
         open_set.push(northeast);

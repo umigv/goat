@@ -133,14 +133,9 @@ int main(int argc, char **argv)
 
 	    // Create a position object that holds the position of the target
 	    position target(gps_target_x, gps_target_y);
-	    
-	    constexpr weight_compare wc = weight_compare(listener);
-
-	    // priority queue to order current positions and eventually find the target
-   	    std::priority_queue<position, std::vector<position>, listener> open_set;
 
 	    // Attempt to find a solution
-	    foundtarget = listener.make_reachable_collection(open_set);
+	    // foundtarget = listener.make_reachable_collection(open_set);
 	} // while
 
 	vector<position> solution_path;
