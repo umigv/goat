@@ -6,7 +6,6 @@ using namespace std;
 // Takes in information from sensor readings
 // Outputs a vector of coordinate pairs outlining a path from the start position to the target position
 
-
 // TO DO: update this GoatControl constructor to reflect its use in the listener node
 GoatControl::GoatControl()
 {
@@ -168,10 +167,9 @@ unsigned int GoatControl::min_cost(position p)
     return min;
 }
 
-
 void GoatControl::gpsCallback(const nav_msgs::Odometry::ConstPtr& msg)
 {
-    /*
+	/*
     this->gpsHeader.seq = msg->header.seq;
     this->gpsHeader.stamp_sec = msg->header.stamp.sec;
     this->gpsHeader.stamp_nsec = msg->header.stamp.nsec;
@@ -199,7 +197,7 @@ void GoatControl::gpsCallback(const nav_msgs::Odometry::ConstPtr& msg)
     this->gpsTwist.angular.x = msg->twist.twist.angular.x;
     this->gpsTwist.angular.y = msg->twist.twist.angular.y;
     this->gpsTwist.angular.z = msg->twist.twist.angular.z;
-    */
+	*/
 
     // Fill out the needed "target" position member variable using info from the odom message
     target = position(msg->pose.pose.position.x, msg->pose.pose.position.y);
@@ -208,7 +206,7 @@ void GoatControl::gpsCallback(const nav_msgs::Odometry::ConstPtr& msg)
 
 void GoatControl::costmapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 {
-    /*
+	/*
     // Fill out header
     this->costmapHeader.seq = msg->header.seq;
     this->costmapHeader.stamp_sec = msg->header.stamp.sec;
@@ -238,7 +236,7 @@ void GoatControl::costmapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
     {
         this->data[i] = msg->data[i];
     }
-    */
+	*/
 
     // Fill out the costmap width and height from the occupancy grid info message
     this->costmap_width = msg->info.width;

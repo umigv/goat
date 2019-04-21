@@ -7,16 +7,19 @@
 
 using namespace std;
 
+position GoatControl::target = position();
+std::vector<std::vector<unsigned int> > GoatControl::cost_map;
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "listener");
 
 	ros::NodeHandle n;
 
-	//GoatControl listener = GoatControl();
+	GoatControl listener = GoatControl();
 
-	//ros::Subscriber gps_sub = n.subscribe(gps_topic_name, 1000, &GoatControl::gpsCallback, &listener);
-	//ros::Subscriber costmap_sub = n.subscribe(costmap_topic_name, 1000, &GoatControl::costmapCallback, &listener);
+	ros::Subscriber gps_sub = n.subscribe(gps_topic_name, 1000, &GoatControl::gpsCallback, &listener);
+	ros::Subscriber costmap_sub = n.subscribe(costmap_topic_name, 1000, &GoatControl::costmapCallback, &listener);
 
 	// Placeholders for the coordinates of the starting position
 	unsigned int start_x = 0;
@@ -41,7 +44,7 @@ int main(int argc, char **argv)
 	    position target(gps_target_x, gps_target_y);
 
 	    // Attempt to find a solution
-	    // foundtarget = listener.make_reachable_collection(open_set);
+	    foundtarget = listener.make_reachable_collection();
 	} // while
 
 	vector<position> solution_path;
@@ -50,9 +53,9 @@ int main(int argc, char **argv)
 	// Solution path is given in reverse order, starting from the goal 
 	// and listing the previous position until it reaches the start
 	
-	//listener.backtracker(solution_path);
+	listener.backtracker(solution_path);
 
-	ros::spin();
+	//ros::spin();
 
 	return 0;
 }
