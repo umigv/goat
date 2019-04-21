@@ -31,11 +31,17 @@ class Robot{
 
         tf::Vector3 get_heading(){
             tf::Quaternion q(current_orientation.x, current_orientation.y, current_orientation.z, current_orientation.w);
+            if(*q == 0){
+                return kInitial_heading;
+            }
             tf::Matrix3x3 rotation_matrix(q);
             return rotation_matrix*kInitial_heading;
         }
         double get_angle_to_target(const geometry_msgs::Point& target){
             tf::Vector3 heading = get_heading();
+            if(*heading == 0){
+                return 0;
+            }
             tf::Vector3 target_heading = tf::Vector3{target.x, target.y, target.z} 
                 - tf::Vector3{current_pos.x, current_pos.y, current_pos.z};
             return heading.angle(target_heading);
@@ -60,7 +66,7 @@ class Robot{
             kAngle_threshold = nh.param("angle_threshold", M_PI/16);
             kLinear_magnitude = nh.param("linear_magnitude", 10);
         }
-    	void get_pose_callback(geometry_msgs::Pose msg) {
+    	void get_pose_callback(geometry_msgs::Pose& msg) {
 
     		current_pos = msg.position;
     		current_orientation = msg.orientation;
