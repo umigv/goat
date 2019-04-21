@@ -6,32 +6,47 @@
 #include <unordered_set>
 #include <cmath>
 #include <algorithm>
+#include <functional>
 
-    // Struct that contains an (x, y) pair of coordinates
-	struct position
-	{
-	    position(unsigned int x_in, unsigned int y_in): x(x_in), y(y_in)
-	    {
-	    }
-	    
-	    unsigned int x;
-	    unsigned int y;
-	}; // position struct
+// Struct that contains an (x, y) pair of coordinates
+struct position
+{
+	position(): x(0), y(0) {}
+	position(unsigned int x_in, unsigned int y_in): x(x_in), y(y_in) {}
 
-    // Comparator to take into account cost and distance of two positions
-	class weight_compare
+	bool operator==(const position &other) const
 	{
-	public:
-		weight_compare(GoatControl gc) {}
-	    // pathfinding heuristic as written and described in [insert stanford article source here]
-	    bool operator()(const position a, const position b)
-	    {
-		double d = std::min(gc.min_cost(a), gc.min_cost(b));
-		double weight_a = d * gc.distance(a, gc.target) + gc.cost_map[a.x][a.y];
-		double weight_b = d * gc.distance(b, gc.target) + gc.cost_map[b.x][b.y];
-		return weight_a < weight_b;
-	    }
-	}; // comparator for priority queue
+		if(other.x == this->x && other.y == this->y)
+		{
+			return true;
+		}
+		return false;
+  	}
+	unsigned int x;
+	unsigned int y;
+}; // position struct
+
+// Struct that contains an (x, y) pair of coordinates
+struct position_hasher
+{
+	size_t operator()(const position &pos) const
+	{
+		return std::hash<unsigned int>()(pos.x);
+	}
+}; // position struct
+
+// Struct that contains an (x, y) pair of coordinates
+struct position_comparator
+{
+	bool operator()(const position &pos1, const position &pos2) const
+	{
+		if(pos1.x == pos2.x && pos1.y == pos2.y)
+		{
+			return true;
+		}
+		return false;
+	}
+}; // position struct
 
 class GoatControl
 {
@@ -40,10 +55,7 @@ public:
 	GoatControl();
 
     // Breadth first search 
-    bool make_reachable_collection();
-
-    // Returns whether the position is reachable or not
-    void add_reachable_adjacent(unsigned int x, unsigned int y);
+    bool make_reachable_collection(std::priority_queue<position, std::vector<position>, weight_compare> &open_set);
 
     // Starts at target and backtracks, adding information to the solution path
     // Then once it hits the starting position, stops and reverses the solution path vector
@@ -60,6 +72,9 @@ public:
 
     void costmapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg);
 
+    friend struct position;
+    friend class weight_compare;
+
 private:
 
     // create a position object that holds the starting position
@@ -68,23 +83,17 @@ private:
     // create a position object that holds the position of the target
     position target;
 
-    // priority queue to order current positions and eventually find the target
-    std::priority_queue<position, std::vector<position>, weight_compare> open_set;
-
     // unordered set to store the positions that have already been visited
-    std::unordered_set<position> closed_set;
+    std::unordered_set<position, position_hasher, position_comparator> closed_set;
 
     // cost map from input that stores the values of the costs of each location
-    std::vector<std::vector<unsigned int>> cost_map;
+    std::vector<std::vector<unsigned int> > cost_map;
 
     // data structure for backtracking
-    std::vector<std::vector<position>> backtrack_map;
+    std::vector<std::vector<position> > backtrack_map;
 
     int costmap_width;
     int costmap_height;
-
-    friend struct position;
-    friend class weight_compare;
 
     /*
     struct Header
