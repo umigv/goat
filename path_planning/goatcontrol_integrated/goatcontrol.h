@@ -1,6 +1,11 @@
 #ifndef GOATCONTROL_H_
 #define GOATCONTROL_H_
 
+#include "ros/ros.h"
+#include "std_msgs/String.h"
+#include "nav_msgs/OccupancyGrid.h"
+#include "nav_msgs/Odometry.h"
+#include "sensor_msgs/Imu.h"
 #include <vector>
 #include <queue>
 #include <unordered_set>
