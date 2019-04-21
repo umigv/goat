@@ -46,7 +46,7 @@ void GoatControl::gpsCallback(const nav_msgs::Odometry::ConstPtr& msg)
     */
 
     // Fill out the needed "target" position member variable using info from the odom message
-    this->target = position(msg->pose.pose.position.x, msg->pose.pose.position.y);
+    target = position(msg->pose.pose.position.x, msg->pose.pose.position.y);
 
 }
 

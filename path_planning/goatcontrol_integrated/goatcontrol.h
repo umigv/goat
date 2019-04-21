@@ -62,11 +62,11 @@ public:
     void backtracker(std::vector<position> &solution_path);
 
     // Calculates Euclidean distance between two positions
-    double distance(position a, position b);
+    static double distance(position a, position b);
 
     // When given a position, calculates the minimum possible cost of traveling from
     // said position to any of the adjacent spaces
-    unsigned int min_cost(position p);
+    static unsigned int min_cost(position p);
 
     void gpsCallback(const nav_msgs::Odometry::ConstPtr& msg);
 
@@ -74,15 +74,15 @@ public:
 
     class weight_compare
     {
-	public:
-	// pathfinding heuristic as written and described in [insert stanford article source here]
-	bool operator()(const position a, const position b)
-	{
-	double d = std::min(min_cost(a), min_cost(b));
-	double weight_a = d * distance(a, target) + cost_map[a.x][a.y];
-	double weight_b = d * distance(b, target) + cost_map[b.x][b.y];
-	return weight_a < weight_b;
-	}
+    public:
+		// pathfinding heuristic as written and described in [insert stanford article source here]
+		bool operator()(const position a, const position b)
+		{
+			double d = std::min(min_cost(a), min_cost(b));
+			double weight_a = d * distance(a, target) + cost_map[a.x][a.y];
+			double weight_b = d * distance(b, target) + cost_map[b.x][b.y];
+			return weight_a < weight_b;
+		}
     }; // comparator for priority queue
 
     friend struct position;
@@ -94,7 +94,7 @@ private:
     position start;
 
     // create a position object that holds the position of the target
-    position target;
+    static position target;
 
     // priority queue to order current positions and eventually find the target
     std::priority_queue<position, std::vector<position>, weight_compare> open_set;
@@ -103,7 +103,7 @@ private:
     std::unordered_set<position, position_hasher, position_comparator> closed_set;
 
     // cost map from input that stores the values of the costs of each location
-    std::vector<std::vector<unsigned int> > cost_map;
+    static std::vector<std::vector<unsigned int> > cost_map;
 
     // data structure for backtracking
     std::vector<std::vector<position> > backtrack_map;
