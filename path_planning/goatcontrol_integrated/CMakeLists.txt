@@ -19,8 +19,8 @@ include_directories(
 
 catkin_package()
 
-add_executable(${PROJECT_NAME}_node src/goat/listener/listener.cpp)
+add_executable(${PROJECT_NAME}_node listener.cpp goatcontrol.cpp)
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_library(goatcontrol_lib src/goat/listener/goatcontrol.h src/goat/listener/goatcontrol.cpp)
-target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES} goatcontrol_lib)
+
+target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
