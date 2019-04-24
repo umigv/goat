@@ -101,6 +101,8 @@ private:
     // create a position object that holds the position of the target
     static position target;
 
+	geometry_msgs::Pose currentPose;
+
     // priority queue to order current positions and eventually find the target
     std::priority_queue<position, std::vector<position>, weight_compare> open_set;
 
