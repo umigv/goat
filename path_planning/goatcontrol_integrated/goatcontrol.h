@@ -80,14 +80,14 @@ public:
     class weight_compare
     {
     public:
-		// pathfinding heuristic as written and described in [insert stanford article source here]
-		bool operator()(const position a, const position b)
-		{
-			double d = std::min(min_cost(a), min_cost(b));
-			double weight_a = d * distance(a, target) + cost_map[a.x][a.y];
-			double weight_b = d * distance(b, target) + cost_map[b.x][b.y];
-			return weight_a < weight_b;
-		}
+	// pathfinding heuristic as written and described in [insert stanford article source here]
+	bool operator()(const position a, const position b)
+	{
+		double d = std::min(min_cost(a), min_cost(b));
+		double weight_a = d * distance(a, target) + cost_map[a.x][a.y];
+		double weight_b = d * distance(b, target) + cost_map[b.x][b.y];
+		return weight_a < weight_b;
+	}
     }; // comparator for priority queue
 
     friend struct position;

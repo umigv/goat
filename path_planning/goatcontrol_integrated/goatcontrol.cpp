@@ -31,61 +31,97 @@ bool GoatControl::make_reachable_collection()
 	unsigned int x = current.x;
 	unsigned int y = current.y;
 
-    position northeast = position(x + 1, y + 1);
-    if(cost_map[x + 1][y + 1] < 200 && closed_set.find(northeast) == closed_set.end())
-    {
-        open_set.push(northeast);
-        backtrack_map[x + 1][y + 1] = northeast;
-    }
+    	position northeast = position(x + 1, y + 1);
+	if(x + 1 >= costmap_width || x + 1 < 0 ||
+	y + 1 >= costmap_height || y + 1 < 0)
+	{
+		updatePath();
+	}
+    	else if(cost_map[x + 1][y + 1] < 200 && closed_set.find(northeast) == closed_set.end())
+    	{
+		open_set.push(northeast);
+		backtrack_map[x + 1][y + 1] = northeast;
+    	}
 
-    position east = position(x + 1, y);
-    if(cost_map[x + 1][y] < 200 && closed_set.find(east) == closed_set.end())
-    {
-        open_set.push(east);
-        backtrack_map[x + 1][y] = east;
-    }
-    
-    position southeast = position(x + 1, y - 1);
-    if(cost_map[x + 1][y - 1]  < 200 && closed_set.find(southeast) == closed_set.end())
-    {
-        open_set.push(southeast);
-        backtrack_map[x + 1][y - 1] = southeast;
-    }
-    
-    position north = position(x, y + 1);
-    if(cost_map[x][y + 1] < 200 && closed_set.find(north) == closed_set.end())
-    {
-        open_set.push(north);
-        backtrack_map[x][y + 1] = north;
-    }
-    
-   position south = position(x, y - 1);
-    if(cost_map[x][y - 1] < 200 && closed_set.find(south) == closed_set.end())
-    {
-        open_set.push(south);
-        backtrack_map[x][y - 1] = south;
-    }
-    
-    position northwest = position(x - 1, y + 1);
-    if(cost_map[x - 1][y + 1] < 200 && closed_set.find(northwest) == closed_set.end())
-    {
-        open_set.push(northwest);
-        backtrack_map[x - 1][y + 1] = northwest;
-    }
-    
-    position west = position(x - 1, y);
-    if(cost_map[x - 1][y] < 200 && closed_set.find(west) == closed_set.end())
-    {
-        open_set.push(west);
-        backtrack_map[x - 1][y] = west;
-    }
-    
-    position southwest = position(x - 1, y - 1);
-    if(cost_map[x - 1][y - 1] < 200 && closed_set.find(southwest) == closed_set.end())
-    {
-        open_set.push(southwest);
-        backtrack_map[x - 1][y - 1] = southwest;
-    }
+	position east = position(x + 1, y);
+	if(x + 1 >= costmap_width || x + 1 < 0)
+	{
+		updatePath();
+	}
+	else if(cost_map[x + 1][y] < 200 && closed_set.find(east) == closed_set.end())
+	{
+		open_set.push(east);
+		backtrack_map[x + 1][y] = east;
+	}
+
+	position southeast = position(x + 1, y - 1);
+	if(x + 1 >= costmap_width || x + 1 < 0 ||
+	y - 1 >= costmap_height || y - 1 < 0)
+	{
+		updatePath();
+	}
+	else if(cost_map[x + 1][y - 1]  < 200 && closed_set.find(southeast) == closed_set.end())
+	{
+		open_set.push(southeast);
+		backtrack_map[x + 1][y - 1] = southeast;
+	}
+
+	position north = position(x, y + 1);
+	if(y + 1 >= costmap_height || y + 1 < 0)
+	{
+		updatePath();
+	}
+	else if(cost_map[x][y + 1] < 200 && closed_set.find(north) == closed_set.end())
+	{
+		open_set.push(north);
+		backtrack_map[x][y + 1] = north;
+	}
+
+	position south = position(x, y - 1);
+	if(y - 1 >= costmap_height || y - 1 < 0)
+	{
+		updatePath();
+	}
+	else if(cost_map[x][y - 1] < 200 && closed_set.find(south) == closed_set.end())
+	{
+		open_set.push(south);
+		backtrack_map[x][y - 1] = south;
+	}
+
+	position northwest = position(x - 1, y + 1);
+	if(x - 1 >= costmap_width || x - 1 < 0 ||
+	y + 1 >= costmap_height || y + 1 < 0)
+	{
+		updatePath();
+	}
+	else if(cost_map[x - 1][y + 1] < 200 && closed_set.find(northwest) == closed_set.end())
+	{
+		open_set.push(northwest);
+		backtrack_map[x - 1][y + 1] = northwest;
+	}
+
+	position west = position(x - 1, y);
+	if(x - 1 >= costmap_width || x - 1 < 0)
+	{
+		updatePath();
+	}
+	else if(cost_map[x - 1][y] < 200 && closed_set.find(west) == closed_set.end())
+	{
+		open_set.push(west);
+		backtrack_map[x - 1][y] = west;
+	}
+
+	position southwest = position(x - 1, y - 1);
+	if(x - 1 >= costmap_width || x - 1 < 0 ||
+	y - 1 >= costmap_height || y - 1 < 0)
+	{
+		updatePath();
+	}
+	else if(cost_map[x - 1][y - 1] < 200 && closed_set.find(southwest) == closed_set.end())
+	{
+		open_set.push(southwest);
+		backtrack_map[x - 1][y - 1] = southwest;
+	}
     } // while
 
     return false;

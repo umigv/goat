@@ -31,11 +31,14 @@ int main(int argc, char **argv)
 
 	bool foundtarget = false;
 
-	// TO DO: figure out whether this loop should be done in a callback function
-	// and how the timing of the callback functions and this control loop will interact
+	// TO DO: implement the following logic described in the comment
 	
-	// Loop while a solution isn't found
-	while(!foundtarget)
+	// When one of the current paths exceeds the width or height of the current costmap,
+	// reload the costmap data to update and extend the best current path
+	// After choosing best path, backtrack and move to it using motor commands
+	// Then clear member variables of goatcontrol object and start over with current position
+	// Keep looping until you reach the target
+	while(!foundtarget || !reachedBound)
 	{
 	    // Create a position object that holds the starting position
 	    position start(start_x, start_y);
