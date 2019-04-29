@@ -102,14 +102,7 @@ int main(int argc, char** argv){
     ros::NodeHandle nh_pub;
     ros::NodeHandle nh_priv("~");
     ros::Publisher pub = nh_pub.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
-    geometry_msgs::Point p1;
-    geometry_msgs::Point p2;
-    p2.x = 10;
-    p2.y = 10;
-    geometry_msgs::Point p3;
-    p3.x = 20;
-    p3.y = 15;
-    std::vector<geometry_msgs::Point> path{p1, p2, p3};
+    std::vector<geometry_msgs::Point> path;
     auto target_it = path.begin();
 
     Robot my_bot{nh_priv};
