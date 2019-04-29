@@ -55,7 +55,10 @@ int main(int argc, char **argv)
 	
 	listener.backtracker(solution_path);
 
-	//ros::spin();
+	// Reverse the solution path so that it goes from the start node to the target
+	reverse(solution_path.begin(), solution_path.end());
+
+	ros::spin();
 
 	return 0;
 }
