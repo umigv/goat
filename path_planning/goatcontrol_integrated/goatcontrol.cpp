@@ -182,10 +182,11 @@ unsigned int GoatControl::min_cost(position p)
 void GoatControl::gpsCallback(const nav_msgs::Odometry::ConstPtr& msg)
 {
     // Fill out the needed "target" position member variable using info from the odom message
-    target = position(msg->pose.pose.position.x, msg->pose.pose.position.y);
+    target = position(msg->pose.pose.position.x, msg->pose.pose.position.y); // TO DO: update target with correct data
 	
 	// Fill out the member variable that stores the current pose
 	currentPose = msg->pose.pose;
+    start = position(currentPose.position.x, currentPose.position.y);
 
 }
 
