@@ -97,6 +97,7 @@ public:
 
     friend struct position;
     friend class weight_compare;
+    friend class calculate_path;
 
 private:
 
