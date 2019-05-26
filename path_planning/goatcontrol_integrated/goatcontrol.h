@@ -98,7 +98,7 @@ public:
     friend struct position;
     friend class weight_compare;
 
-private:
+protected:
 
     // create a position object that holds the starting position
     position start;

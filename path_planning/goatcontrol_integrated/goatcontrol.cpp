@@ -14,6 +14,8 @@ GoatControl::GoatControl()
 // Breadth first search 
 bool GoatControl::make_reachable_collection()
 {
+	open_set.push(start);
+
     while(!open_set.empty())
     {
         position current = open_set.top();
