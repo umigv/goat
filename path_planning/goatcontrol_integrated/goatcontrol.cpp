@@ -43,7 +43,7 @@ bool GoatControl::make_reachable_collection()
 	    }
 
 		position east = position(x + 1, y);
-		if(x < costmap_width &&
+		if(x + 1 < costmap_width &&
 	    	cost_map[x + 1][y] < 200 && closed_set.find(east) == closed_set.end())
 		{
 			open_set.push(east);
@@ -51,7 +51,7 @@ bool GoatControl::make_reachable_collection()
 		}
 
 		position southeast = position(x + 1, y - 1);
-		if((x + 1) < costmap_width && (y - 1) >= costmap_height &&
+		if((x + 1) < costmap_width && (y - 1) >= 0 &&
 			cost_map[x + 1][y - 1]  < 200 && closed_set.find(southeast) == closed_set.end())
 		{
 			open_set.push(southeast);
@@ -67,7 +67,7 @@ bool GoatControl::make_reachable_collection()
 		}
 
 		position south = position(x, y - 1);
-		if((y - 1) >= costmap_height &&
+		if((y - 1) >= 0 &&
 			cost_map[x][y - 1] < 200 && closed_set.find(south) == closed_set.end())
 		{
 			open_set.push(south);
@@ -75,7 +75,7 @@ bool GoatControl::make_reachable_collection()
 		}
 
 		position northwest = position(x - 1, y + 1);
-		if((x - 1) >= costmap_width && (y + 1) < costmap_height &&
+		if((x - 1) >= 0 && (y + 1) < costmap_height &&
 	    	cost_map[x - 1][y + 1] < 200 && closed_set.find(northwest) == closed_set.end())
 		{
 			open_set.push(northwest);
@@ -83,7 +83,7 @@ bool GoatControl::make_reachable_collection()
 		}
 
 		position west = position(x - 1, y);
-		if((x - 1) >= costmap_width &&
+		if((x - 1) >= 0 &&
 	    	cost_map[x - 1][y] < 200 && closed_set.find(west) == closed_set.end())
 		{
 			open_set.push(west);
@@ -91,7 +91,7 @@ bool GoatControl::make_reachable_collection()
 		}
 
 		position southwest = position(x - 1, y - 1);
-		if((x - 1) >= costmap_width && (y - 1) >= costmap_height &&
+		if((x - 1) >= 0 && (y - 1) >= 0 &&
 	    	cost_map[x - 1][y - 1] < 200 && closed_set.find(southwest) == closed_set.end())
 		{
 			open_set.push(southwest);
