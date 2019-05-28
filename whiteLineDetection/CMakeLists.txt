@@ -13,13 +13,23 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(OpenCV_INCLUDE_DIRS
+	/usr/local/include
+	/usr/local/include/opencv2
+)
+
+set(OpenCV_LIB_DIR
+	/usr/local/lib
+)
+
+set(OpenCV_LIBS
+	opencv_core
+	opencv_cudaarithm
+	opencv_cudaimgproc
+)
+
 find_package(CUDA 9 REQUIRED)
 find_package(ZED 2.7 REQUIRED)
-find_package(OpenCV REQUIRED
-NO_MODULE 
-PATHS /usr/local
-NO_DEFAULT_PATH
-)
 
 find_package(SimtTf REQUIRED)
 
@@ -30,9 +40,12 @@ catkin_package(CATKIN_DEPENDS roscpp)
 include_directories(include  ${catkin_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${ZED_INCLUDE_DIRS}
                                         ${OpenCV_INCLUDE_DIRS})
 
+link_directories(${OpenCV_LIB_DIR})
+
 add_executable(whiteLineDetection src/main.cpp src/WhiteLineDetection.cpp )
+
 target_link_libraries(whiteLineDetection ${catkin_LIBRARIES} ${CUDA_LIBRARIES} ${ZED_LIBRARIES}
-                                          ${OpenCV_LIBRARIES} SimtTf::SimtTf)
+                                          ${OpenCV_LIBS} SimtTf::SimtTf)
 
 
 

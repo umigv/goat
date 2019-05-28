@@ -1,0 +1,8 @@
+<launch>
+    <include file="$(find goat_launch)/launch/state.launch"/>
+    <include file="$(find goat_launch)/launch/imu.launch"/>
+
+    <node name="whiteLineDetection" pkg="whiteLineDetection"
+    type="whiteLineDetection" args="" />
+
+</launch>
