@@ -26,6 +26,7 @@ bool a_star_test::make_reachable_collection()
     while(!open_set.empty())
     {
         position current = open_set.top();
+        // cout << "Current position: " << current.x << " " << current.y << '\n';
         open_set.pop();
 
         // if it is the target, exit the loop
@@ -34,6 +35,10 @@ bool a_star_test::make_reachable_collection()
             return true;
         } // if
 
+        if(closed_set.find(current) != closed_set.end()){
+            continue; // skip this iteration of the loop
+        }
+
         closed_set.insert(current);
 
         // else add all adjacent states to the queue
@@ -41,7 +46,7 @@ bool a_star_test::make_reachable_collection()
 		unsigned int y = current.y;
 
 		// add southeast state
-    	position southeast = position(x + 1, y + 1);
+    	position southeast = position(x + 1, y + 1, current);
     	// but only if it is within the bounds of the cost_map,
     	// reachable (cost_map val < 200), and it hasn't been added already
 	    if((x + 1 < costmap_height) && (y + 1 < costmap_width)
@@ -49,70 +54,62 @@ bool a_star_test::make_reachable_collection()
            && closed_set.find(southeast) == closed_set.end())
 	    {
 			open_set.push(southeast);
-            closed_set.insert(southeast);
 			backtrack_map[x + 1][y + 1] = current;
 	    }
 
-		position east = position(x + 1, y);
+		position east = position(x + 1, y, current);
 		if((x + 1 < costmap_height) && cost_map[x + 1][y] < 200
-           && closed_set.find(east) == closed_set.end())
+            && closed_set.find(east) == closed_set.end())
 		{
 			open_set.push(east);
-            closed_set.insert(east);
 			backtrack_map[x + 1][y] = current;
 		}
 
-		position northeast = position(x + 1, y - 1);
+		position northeast = position(x + 1, y - 1, current);
 		if((x + 1 < costmap_height) && y >= 1 && cost_map[x + 1][y - 1]  < 200
-           && closed_set.find(northeast) == closed_set.end())
+            && closed_set.find(northeast) == closed_set.end())
 		{
 			open_set.push(northeast);
-            closed_set.insert(northeast);
 			backtrack_map[x + 1][y - 1] = current;
 		}
 
-		position south = position(x, y + 1);
+		position south = position(x, y + 1, current);
 		if((y + 1 < costmap_width) && cost_map[x][y + 1] < 200
-           && closed_set.find(south) == closed_set.end())
+            && closed_set.find(south) == closed_set.end())
 		{
 			open_set.push(south);
-            closed_set.insert(south);
 			backtrack_map[x][y + 1] = current;
 		}
 
-		position north = position(x, y - 1);
+		position north = position(x, y - 1, current);
 		if(y >= 1 && cost_map[x][y - 1] < 200
-           && closed_set.find(north) == closed_set.end())
+            && closed_set.find(north) == closed_set.end())
 		{
 			open_set.push(north);
-            closed_set.insert(north);
 			backtrack_map[x][y - 1] = current;
 		}
 
-		position southwest = position(x - 1, y + 1);
+		position southwest = position(x - 1, y + 1, current);
 		if(x >= 1 && (y + 1 < costmap_width) && cost_map[x - 1][y + 1] < 200
-           && closed_set.find(southwest) == closed_set.end())
+            && closed_set.find(southwest) == closed_set.end())
 		{
 			open_set.push(southwest);
-            closed_set.insert(southwest);
 			backtrack_map[x - 1][y + 1] = current;
 		}
 
-		position west = position(x - 1, y);
+		position west = position(x - 1, y, current);
 		if(x >= 1 && cost_map[x - 1][y] < 200
-           && closed_set.find(west) == closed_set.end())
+            && closed_set.find(west) == closed_set.end())
 		{
 			open_set.push(west);
-            closed_set.insert(west);
 			backtrack_map[x - 1][y] = current;
 		}
 
-		position northwest = position(x - 1, y - 1);
+		position northwest = position(x - 1, y - 1, current);
 		if(x >= 1 && y >= 1 && cost_map[x - 1][y - 1] < 200
-           && closed_set.find(northwest) == closed_set.end())
+            && closed_set.find(northwest) == closed_set.end())
 		{
 			open_set.push(northwest);
-            closed_set.insert(northwest);
 			backtrack_map[x - 1][y - 1] = current;
 		}
     } // while
@@ -145,53 +142,3 @@ double a_star_test::distance(position a, position b)
     return sqrt((x_diff * x_diff) + (y_diff * y_diff));
 }
 
-// When given a position, calculates the minimum possible cost of traveling from
-// said position to any of the adjacent spaces
-unsigned int a_star_test::min_cost(position p)
-{
-    unsigned int min = 0;
-    unsigned int x = p.x;
-    unsigned int y = p.y;
-
-    if(x > 0 && cost_map[x - 1][y] < min)
-    {
-        min = cost_map[x - 1][y];
-    }
-
-    if(x + 1 < costmap_height && cost_map[x + 1][y] < min)
-    {
-        min = cost_map[x + 1][y];
-    }
-
-    if(y > 0 && cost_map[x][y - 1] < min)
-    {
-        min = cost_map[x][y - 1];
-    }
-
-    if(y + 1 < costmap_width && cost_map[x][y + 1] < min)
-    {
-        min = cost_map[x][y + 1];
-    }
-
-    if(x > 0 && y > 0 && cost_map[x - 1][y - 1] < min)
-    {
-        min = cost_map[x - 1][y - 1];
-    }
-
-    if(x + 1 < costmap_height && y + 1 < costmap_width && cost_map[x + 1][y + 1] < min)
-    {
-        min = cost_map[x + 1][y + 1];
-    }
-
-    if(x + 1 < costmap_height && y > 0 && cost_map[x + 1][y - 1] < min)
-    {
-        min = cost_map[x + 1][y - 1];
-    }
-
-    if(x > 0 && y + 1 < costmap_width && cost_map[x - 1][y + 1] < min)
-    {
-        min = cost_map[x - 1][y + 1] < min;
-    }
-
-    return min;
-}

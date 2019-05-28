@@ -7,12 +7,17 @@
 #include <cmath>
 #include <algorithm>
 #include <functional>
+#include <iostream>
 
 // Struct that contains an (x, y) pair of coordinates
 struct position
 {
 	position(): x(0), y(0) {}
 	position(unsigned int x_in, unsigned int y_in): x(x_in), y(y_in) {}
+    position(unsigned int x_in, unsigned int y_in, position previous): x(x_in), y(y_in) {
+        prev_x = previous.x;
+        prev_y = previous.y;
+    }
 
 	bool operator==(const position &other) const
 	{
@@ -24,6 +29,9 @@ struct position
   	}
 	unsigned int x;
 	unsigned int y;
+
+    unsigned int prev_x;
+    unsigned int prev_y;
 }; // position struct
 
 // Struct that contains an (x, y) pair of coordinates
@@ -77,22 +85,16 @@ public:
     {
         a_star_test* gc;
 
-        // pathfinding heuristic as written and described in [insert stanford article source here]
         bool operator()(position a, position b)
         {
-            /*
-            double d = std::min(gc->min_cost(a), gc->min_cost(b));
-            if(d == 0 && (gc->cost_map[a.x][a.y] == gc->cost_map[b.x][b.y]))
-            {
-                d = 1;
-            } */
-            const double weight_a = gc->cost_map[a.x][a.y];
-            const double weight_b = gc->cost_map[b.x][b.y];
+            // const double weight_a = gc->cost_map[a.x][a.y];
+            // const double weight_b = gc->cost_map[b.x][b.y];
+         
+            // can weight the heuristic later depending on how the costmaps look   
+            const double h_weight = 100;
+            const double weight_a = h_weight * gc->distance(a, gc->target) + gc->cost_map[a.x][a.y];
+            const double weight_b = h_weight * gc->distance(b, gc->target) + gc->cost_map[b.x][b.y];
             
-            /*
-             const double weight_a = (0.2 * gc->distance(a, gc->target)) + gc->cost_map[a.x][a.y];
-             const double weight_b = (0.2 * gc->distance(b, gc->target)) + gc->cost_map[b.x][b.y];
-             */
             return weight_a < weight_b;
         }
     }; // comparator for priority queue
@@ -117,7 +119,6 @@ protected:
     // cost map from input that stores the values of the costs of each location
     std::vector<std::vector<unsigned int> > cost_map;
 
-    // data structure for backtracking
     std::vector<std::vector<position> > backtrack_map;
 
     int costmap_width;

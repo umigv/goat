@@ -1,5 +1,4 @@
 #include "a_star_test.h"
-#include "csvstream.h"
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -7,10 +6,10 @@
 
 using namespace std;
 
-std::vector<std::vector<unsigned int>> parse_csv(std::istream &is) {
+std::vector<std::vector<unsigned int> > parse_csv(std::istream &is) {
     std::string line;
     std::string number;
-    std::vector<std::vector<unsigned int>> parsed;
+    std::vector<std::vector<unsigned int> > parsed;
     
     while (std::getline(is, line)) {
         parsed.emplace_back();
