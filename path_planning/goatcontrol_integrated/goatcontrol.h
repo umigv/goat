@@ -67,39 +67,45 @@ public:
     void backtracker(std::vector<position> &solution_path);
 
     // Calculates Euclidean distance between two positions
-    static double distance(position a, position b);
+    double distance(position a, position b);
 
     // When given a position, calculates the minimum possible cost of traveling from
     // said position to any of the adjacent spaces
-    static unsigned int min_cost(position p);
+    unsigned int min_cost(position p);
 
     void gpsCallback(const nav_msgs::Odometry::ConstPtr& msg);
 
     void costmapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg);
 
-    class weight_compare
+    struct weight_compare
     {
-    public:
-	// pathfinding heuristic as written and described in [insert stanford article source here]
-	bool operator()(const position a, const position b)
-	{
-		double d = std::min(min_cost(a), min_cost(b));
-		double weight_a = d * distance(a, target) + cost_map[a.x][a.y];
-		double weight_b = d * distance(b, target) + cost_map[b.x][b.y];
-		return weight_a < weight_b;
-	}
+        GoatControl* gc;
+
+        // pathfinding heuristic as written and described in [insert stanford article source here]
+        bool operator()(position a, position b)
+        {
+            double d = std::min(gc->min_cost(a), gc->min_cost(b));
+            if(d == 0 && (gc->cost_map[a.x][a.y] == gc->cost_map[b.x][b.y]))
+            {
+                d = 1;
+            }
+            const double weight_a = d * gc->distance(a, gc->target) + gc->cost_map[a.x][a.y];
+            const double weight_b = d * gc->distance(b, gc->target) + gc->cost_map[b.x][b.y];
+            return weight_a < weight_b;
+        }
     }; // comparator for priority queue
 
     friend struct position;
     friend class weight_compare;
+    friend class calculate_path;
 
-private:
+protected:
 
     // create a position object that holds the starting position
     position start;
 
     // create a position object that holds the position of the target
-    static position target;
+    position target;
 
 	geometry_msgs::Pose currentPose;
 
@@ -110,7 +116,7 @@ private:
     std::unordered_set<position, position_hasher, position_comparator> closed_set;
 
     // cost map from input that stores the values of the costs of each location
-    static std::vector<std::vector<unsigned int> > cost_map;
+    std::vector<std::vector<unsigned int> > cost_map;
 
     // data structure for backtracking
     std::vector<std::vector<position> > backtrack_map;
