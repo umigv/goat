@@ -11,4 +11,9 @@
   <arg name="moveit_sensor_manager" default="goat" />
   <include file="$(find goat_moveit_config)/launch/$(arg moveit_sensor_manager)_moveit_sensor_manager.launch.xml" />
 
+  <rosparam command="load" file="$(find goat_moveit_config)/config/sensors_kinect_pointcloud.yaml" />
+
+  <param name="octomap_frame" type="string" value="odom_combined" />
+  <param name="octomap_resolution" type="double" value="0.05" />
+  <param name="max_range" type="double" value="5.0" />
 </launch>
