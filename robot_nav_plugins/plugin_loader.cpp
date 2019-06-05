@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 
 	try
 	{
-		boost::shared_ptr<nav_core_adapter::CostmapAdapter> costmap = costmap_loader.createInstance("nav_core2::Costmap");
+		boost::shared_ptr<nav_core2::Costmap> costmap = costmap_loader.createInstance("nav_core_adapter::CostmapAdapter");
 		// ... use the costmap, boost::shared_ptr will automatically delete memory when it goes out of scope
 	}
 
