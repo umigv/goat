@@ -1,0 +1,5 @@
+<launch>
+	<node pkg="locomotor" type="locomotor" respawn="true" name="locomotor" output="screen">
+		<rosparam file="$(find goat_launch)/params/locomotor_params.yaml" command="load" ns="global_costmap"/>
+	</node>
+</launch>
