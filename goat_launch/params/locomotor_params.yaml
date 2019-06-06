@@ -19,5 +19,4 @@ locomotor:
     debug_trajectory_details: false
     trajectory_generator_name: base_local_planner
     goal_checker_name: dwb_plugins::SimpleGoalChecker
-    default_critic_namespaces:
     plugins: {type: "nav_core2::LocalPlanner", name: local}
