@@ -38,18 +38,20 @@ find_package(ZED 2.7 REQUIRED)
 
 find_package(SimtTf REQUIRED)
 
-find_package(catkin REQUIRED COMPONENTS roscpp  tf2 tf2_ros) #remove cv_bridge
+find_package(PCL REQUIRED COMPONENTS common)
+find_package(catkin REQUIRED COMPONENTS roscpp tf2 tf2_ros pcl_conversions) #remove cv_bridge
 
-catkin_package(CATKIN_DEPENDS roscpp)
+catkin_package(CATKIN_DEPENDS roscpp tf2 tf2_ros pcl_conversions)
 
 include_directories(include  ${catkin_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} ${ZED_INCLUDE_DIRS}
-                                        ${OpenCV_INCLUDE_DIRS})
-link_directories(${OpenCV_LIB_DIR})
+                                        ${OpenCV_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
+link_directories(${OpenCV_LIB_DIR} ${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 add_executable(whiteLineDetection src/main.cpp src/WhiteLineDetection.cpp )
 
 target_link_libraries(whiteLineDetection ${catkin_LIBRARIES} ${CUDA_LIBRARIES} ${ZED_LIBRARIES}
-                                          ${OpenCV_LIBS} SimtTf::SimtTf)
+                                          ${OpenCV_LIBS} SimtTf::SimtTf ${PCL_LIBRARIES})
 
 
 

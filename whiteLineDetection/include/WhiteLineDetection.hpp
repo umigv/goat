@@ -38,20 +38,19 @@
 
 #include <simt_tf/simt_tf.h>
 
-using namespace std;
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
-#define X false
-#define Y true
+using namespace std;
 
 class DetectWhiteLines{
 
 public:
-  DetectWhiteLines(const ros::NodeHandle n)
+  DetectWhiteLines(const ros::NodeHandle &n)
+  : node(n), occ_pub(node.advertise<sensor_msgs::PointCloud2>("white_lines", 10))
   {
-		node = n;
 		xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
-		outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0));
-		occ_pub = node.advertise<sensor_msgs::PointCloud2>("nav_msgs/OccupancyGrid", 50);
+		outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC4, cv::Scalar(0));
 		seqId = 0;
 		initCamera();
   }
@@ -135,7 +134,7 @@ private:
 		cv::waitKey(time);
   }
 
-  void clearXZ() { xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));}
+  void clearXZ() { xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC4, cv::Scalar(0,0,0));}
 };
 
 #endif

@@ -10,9 +10,12 @@
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cudaimgproc.hpp"
 
+#include <pcl_conversions/pcl_conversions.h>
+
+#define X false
+#define Y true
 
 
-//SWITCH FROM BGR TO BGRA
 /*
         const int64 start = getTickCount();
         //process
@@ -26,7 +29,7 @@ bool DetectWhiteLines::initCamera()
 {
 	initParameters.camera_resolution = sl::RESOLUTION_HD720;
 	initParameters.depth_mode = sl::DEPTH_MODE_PERFORMANCE;
-	initParameters.coordinate_system = sl::COORDINATE_SYSTEM_IMAGE;
+	initParameters.coordinate_system = sl::COORDINATE_SYSTEM_RIGHT_HANDED_Z_UP_X_FWD;
 	initParameters.coordinate_units = sl::UNIT_METER;
 
 	sl::ERROR_CODE err = zed.open(initParameters);
@@ -39,12 +42,13 @@ bool DetectWhiteLines::initCamera()
 	return true;
 }
 
+
 bool DetectWhiteLines::loadPointCloud()
 {
 	sl::ERROR_CODE erg = zed.grab();
 	if(erg == sl::SUCCESS)
 	{
-		zed.retrieveMeasure(point_cloud,sl::MEASURE_XYZRGBA, sl::MEM_GPU);
+		zed.retrieveMeasure(point_cloud,sl::MEASURE_XYZRGBA, sl::MEM_CPU);
 		return true;
 	}
 	return false;
@@ -89,6 +93,9 @@ void DetectWhiteLines::convertXZ()
 */
 			tf2::Vector3 newXYZ = {xyz[2],xyz[0],0};
 			
+			//cout << newXYZ[1] << " " << newXYZ[0] << endl;
+
+			
 			if(isValidPoint(newXYZ[1],Y))
 			{
 				newXYZ[1] = static_cast<int>((newXYZ[1] + SHIFTVAL ) / YDIVISOR);
@@ -112,8 +119,10 @@ void DetectWhiteLines::convertXZ()
 			uchar b = uchar(color.b);
 			uchar g = uchar(color.g);
 
+
 			cv::Vec3b val = xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0]));
 			xzMat.at<cv::Vec3b>(cv::Point(newXYZ[1],newXYZ[0])) = val;
+			//cout << newXYZ[1] << " " << newXYZ[0] << endl;
 		}
 	}
 	valid = true;
@@ -136,7 +145,7 @@ void DetectWhiteLines::whiteLineDetection()
       cv::HoughLinesP(xzMat,lines,1,CV_PI/180,20,10,1);
       for( const auto& i : lines)
       {
-        line(outputImage,cv::Point(i[0],i[1]),cv::Point(i[2],i[3]),cv::Scalar(111),2);
+        line(outputImage,cv::Point(i[0],i[1]),cv::Point(i[2],i[3]),cv::Scalar(100),2);
       }
       //cv::resize(outputImage,outputImage,s,cv::INTER_LANCZOS4);
 }
@@ -159,29 +168,34 @@ void DetectWhiteLines::imuTransform(const sensor_msgs::ImuConstPtr &imu)
 
 DetectWhiteLines::DetectWhiteLines(const DetectWhiteLines & other )
 {
-	xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
+	xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC4, cv::Scalar(0,0,0));
 	outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0));
 	initCamera();
 }
 
 void DetectWhiteLines::publish()
 {
-  /*
-	VERY CONFUSED HOW TO SET THIS UP
-   */
-	sensor_msgs::PointCloud2 occ;
-	occ.height = HEIGHT;
-	occ.width = WIDTH;
+	pcl::PointCloud<pcl::PointXYZ> pointcloud;
+	const float x_shift = (WIDTH * (0.01)) / 2;
+	const float y_shift = (HEIGHT * (0.01)) / 2;
 	
-	//occ.fields[];
+	for(int i = 0; i < HEIGHT; i++)
+	{
+		for(int j = 0; j < WIDTH; j++)
+		{
+			if(outputImage.at<uchar>(cv::Point(i,j)) == 100)
+			{
+				pointcloud.push_back({i * 0.01f - x_shift, j * 0.01f - y_shift, 0.5f});
+			}
+		}
+	}
 	
-	//occ.point_step = ;
-	//occ.row_step = ;
-	//occ.data =;
-	occ.is_dense = true;
+	sensor_msgs::PointCloud2 to_publish;
+	pcl::toROSMsg(pointcloud, to_publish);
 	
-	occ_pub.publish(occ);
-
+	to_publish.header.frame_id = "base_link";
+	
+	occ_pub.publish(to_publish);
 }
 
 
@@ -193,18 +207,20 @@ void DetectWhiteLines::detect(const ros::TimerEvent&)
 	bool value = loadPointCloud();
 	if(value)
 	{	
-		convertXZGPU();
-		displayXZ(2);
+		
+	    convertXZGPU();
+		displayXZ(10);
+		
+		whiteLineDetection();
+		displayWL(10);
+
+		publish();
+		
+		
 		const double timeSec = (getTickCount() - start) / getTickFrequency();
 		cout << "CPU Time : " << timeSec * 1000 << " ms" << endl;
 
-		whiteLineDetection();
-		displayWL(2);
-		
 
-		publish();
-
-		clearXZ();
 	}
 	
 }
@@ -213,6 +229,7 @@ void DetectWhiteLines::detect(const ros::TimerEvent&)
 
 void DetectWhiteLines::convertXZGPU()
 {
+	
 	tf2::Transform transform(imuQuat);
          
 	tf2::Stamped<tf2::Transform> bodyTransform;
@@ -228,12 +245,13 @@ void DetectWhiteLines::convertXZGPU()
 		},	
 		{ float(transform.getOrigin()[0]),float(transform.getOrigin()[1]),float(transform.getOrigin()[2]) }
 	};
-
+	
     cv::cuda::GpuMat output(HEIGHT, WIDTH, CV_8UC4, cv::Scalar(0, 0, 0, 255));
 
-	simt_tf::pointcloud_birdseye(host_tf, zed, point_cloud,output, 0.01);
+	simt_tf::pointcloud_birdseye(host_tf, zed, point_cloud,output,0.01);
+	
+	output.download(xzMat);
 
-    xzMat = cv::Mat(output);
 }
 
 
