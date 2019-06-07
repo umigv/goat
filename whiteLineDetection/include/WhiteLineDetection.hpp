@@ -53,6 +53,9 @@ public:
 		outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC4, cv::Scalar(0));
 		seqId = 0;
 		initCamera();
+		tries = 0;
+		
+		
   }
   
   DetectWhiteLines(const DetectWhiteLines & other);
@@ -85,9 +88,11 @@ private:
   tf2::Quaternion imuQuat;
   ros::Publisher occ_pub;
   geometry_msgs::TransformStamped bodyFrame;
+  geometry_msgs::TransformStamped imuFrame;
   tf2_ros::Buffer * buffer;
   int seqId;
   bool valid = true;
+  int tries;
   
   
   bool initCamera();

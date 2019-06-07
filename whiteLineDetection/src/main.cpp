@@ -20,8 +20,8 @@ int main(int argc, char ** argv)
 
   detecter.loadBuffer(&buff);
 
-  ros::Subscriber sub = n.subscribe<sensor_msgs::Imu>
-    ("/imu/data",1000, [&detecter](const sensor_msgs::ImuConstPtr &imu) {detecter.imuTransform(imu);});
+  //ros::Subscriber sub = n.subscribe<sensor_msgs::Imu>
+   // ("/imu/data",1000, [&detecter](const sensor_msgs::ImuConstPtr &imu) {detecter.imuTransform(imu);});
   ros::Timer whiteLineTime = n.createTimer(ros::Duration(0.5), [&detecter](const ros::TimerEvent& t ){ detecter.detect(t);});
   ros::spin();
   return  0;

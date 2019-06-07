@@ -132,7 +132,7 @@ void DetectWhiteLines::convertXZ()
 void DetectWhiteLines::whiteLineDetection()
 {
       cv::Size s = xzMat.size();
-      outputImage = cv::Mat(s, CV_8UC3, cv::Scalar(0,0,0));
+      outputImage = cv::Mat(s, CV_8UC1, cv::Scalar(0,0,0));
       cv::cvtColor(xzMat,xzMat,CV_BGR2GRAY);
       //cv::resize(xzMat,xzMat,cv::Size(134,200),cv::INTER_LANCZOS4);
       cv::threshold(xzMat,xzMat,170,255,cv::THRESH_BINARY);
@@ -145,7 +145,7 @@ void DetectWhiteLines::whiteLineDetection()
       cv::HoughLinesP(xzMat,lines,1,CV_PI/180,20,10,1);
       for( const auto& i : lines)
       {
-        line(outputImage,cv::Point(i[0],i[1]),cv::Point(i[2],i[3]),cv::Scalar(100),2);
+        line(outputImage,cv::Point(i[0],i[1]),cv::Point(i[2],i[3]),cv::Scalar(255),2);
       }
       //cv::resize(outputImage,outputImage,s,cv::INTER_LANCZOS4);
 }
@@ -157,11 +157,20 @@ void DetectWhiteLines::imuTransform(const sensor_msgs::ImuConstPtr &imu)
 		tf2Scalar arr[4] = {imu->orientation.x,imu->orientation.y,imu->orientation.z,imu->orientation.w};
 		imuQuat = tf2::Quaternion(arr[0],arr[1],arr[2],arr[3]);
 	}
-
-	try{
-		bodyFrame = buffer->lookupTransform("zed_center","base_link",ros::Time(0));
-	} catch(tf2::TransformException &ex){
-		ROS_WARN("%s",ex.what());
+	
+	if((tries++) < 50)
+	{
+		try{
+			bodyFrame = buffer->lookupTransform("zed_center","base_link",ros::Time(0));
+		} catch(tf2::TransformException &ex){
+			ROS_WARN("%s",ex.what());
+		}
+		
+		try{
+			imuFrame = buffer->lookupTransform("imu","base_link",ros::Time(0));
+		} catch(tf2::TransformException &ex){
+			ROS_WARN("%s",ex.what());
+		}
 	}
   
 }
@@ -171,6 +180,7 @@ DetectWhiteLines::DetectWhiteLines(const DetectWhiteLines & other )
 	xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC4, cv::Scalar(0,0,0));
 	outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0));
 	initCamera();
+	tries = 0;
 }
 
 void DetectWhiteLines::publish()
@@ -183,7 +193,7 @@ void DetectWhiteLines::publish()
 	{
 		for(int j = 0; j < WIDTH; j++)
 		{
-			if(outputImage.at<uchar>(cv::Point(i,j)) == 100)
+			if(outputImage.at<uchar>(cv::Point(i,j)))
 			{
 				pointcloud.push_back({i * 0.01f - x_shift, j * 0.01f - y_shift, 0.5f});
 			}
@@ -202,17 +212,25 @@ void DetectWhiteLines::publish()
 void DetectWhiteLines::detect(const ros::TimerEvent&)
 {
 	const int64 start = getTickCount();
-    //process
+	while((tries++) < 50)
+		{
+			try{
+				bodyFrame = buffer->lookupTransform("zed_center","base_link",ros::Time(0));
+			} catch(tf2::TransformException &ex){
+				ROS_WARN("%s",ex.what());
+			}
+		}    
     
+		
 	bool value = loadPointCloud();
 	if(value)
 	{	
 		
 	    convertXZGPU();
-		displayXZ(10);
+		displayXZ(1);
 		
 		whiteLineDetection();
-		displayWL(10);
+		displayWL(1);
 
 		publish();
 		
@@ -230,12 +248,12 @@ void DetectWhiteLines::detect(const ros::TimerEvent&)
 void DetectWhiteLines::convertXZGPU()
 {
 	
-	tf2::Transform transform(imuQuat);
+	//tf2::Transform transform(imuQuat);
+        
+    tf2::Stamped<tf2::Transform> transform;
+	tf2::fromMsg(bodyFrame,transform);    
          
-	tf2::Stamped<tf2::Transform> bodyTransform;
-	tf2::fromMsg(bodyFrame,bodyTransform);
 	
-	transform *= bodyTransform;
 	
 	const simt_tf::Transform host_tf = {
 		{
@@ -246,12 +264,12 @@ void DetectWhiteLines::convertXZGPU()
 		{ float(transform.getOrigin()[0]),float(transform.getOrigin()[1]),float(transform.getOrigin()[2]) }
 	};
 	
-    cv::cuda::GpuMat output(HEIGHT, WIDTH, CV_8UC4, cv::Scalar(0, 0, 0, 255));
+    cv::cuda::GpuMat output(WIDTH, HEIGHT, CV_8UC4, cv::Scalar(0, 0, 0, 255));
+
 
 	simt_tf::pointcloud_birdseye(host_tf, zed, point_cloud,output,0.01);
 	
 	output.download(xzMat);
-
 }
 
 
