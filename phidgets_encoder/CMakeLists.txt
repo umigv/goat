@@ -1,15 +1,12 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.14)
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+project(phidgets_encoder VERSION 0.3.0)
 
-project(phidgets_encoder)
+find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs)
 
-find_package(catkin REQUIRED COMPONENTS phidgets_api roscpp sensor_msgs
-										umigv_utilities)
-										
-catkin_package(CATKIN_DEPENDS phidgets_api roscpp sensor_msgs umigv_utilities)
+catkin_package(CATKIN_DEPENDS roscpp sensor_msgs)
+
+add_executable(phidgets_encoder_node src/encoder.cpp)
 
 include_directories(include/ ${catkin_INCLUDE_DIRS})
 
