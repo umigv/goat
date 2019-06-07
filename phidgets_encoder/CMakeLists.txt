@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.14)
 
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
+
 project(phidgets_encoder VERSION 0.3.0)
 
+find_package(Phidget22 REQUIRED)
 find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs)
-
-catkin_package(CATKIN_DEPENDS roscpp sensor_msgs)
-
-add_executable(phidgets_encoder_node src/encoder.cpp)
 
 catkin_package(CATKIN_DEPENDS roscpp sensor_msgs)
 
