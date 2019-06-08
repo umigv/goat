@@ -80,7 +80,8 @@ int main(int argc, char **argv) {
 
   auto timer_callback = [&desc, &pub](const ros::TimerEvent &) {
     // don't publish if encoders are detached; this is a failure condition
-    if (!std::all_of(desc.cbegin(), desc.cend(), is_attached)) {
+    if (!std::all_of(desc.cbegin(), desc.cend(),
+                     std::mem_fn(&EncoderDescription::is_attached))) {
       ROS_WARN_THROTTLE(1, "at least one encoder is not attached");
 
       return;
