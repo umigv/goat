@@ -4,7 +4,9 @@ locomotor:
   global_costmap_class: nav_core_adapter::CostmapAdapter
   local_costmap_class: nav_core_adapter::CostmapAdapter
   global_costmap:
-    plugins: {type: "nav_core2::GlobalPlanner", name: global}
+    plugins:
+      - {type: "nav_core2::GlobalPlanner", name: global}
+      - {type: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer", name: global_rgbd_obstacle_layer}
     global:
       potential_calculator: dlux_plugins::AStar
       traceback: dlux_plugins::GradientPath
@@ -19,4 +21,6 @@ locomotor:
     debug_trajectory_details: false
     trajectory_generator_name: base_local_planner
     goal_checker_name: dwb_plugins::SimpleGoalChecker
-    plugins: {type: "nav_core2::LocalPlanner", name: local}
+    plugins:
+      - {type: "nav_core2::LocalPlanner", name: local}
+      - {type: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer", name: local_rgbd_obstacle_layer}
