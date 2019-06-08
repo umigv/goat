@@ -1,0 +1,71 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+    <world name="default">
+        <!-- A global light source -->
+        <include>
+            <uri>model://sun</uri>
+        </include>
+        <!-- A ground plane -->
+        <include>
+            <uri>model://ground_plane</uri>
+        </include>
+
+        <!-- start copying and pasting in cones -->
+        <material>
+            <color rgba="249 105 14 1"/>
+        </material>
+
+        <model name="cone1">
+            <pose frame="cone_frame">2 4 0.5 0 0 0</pose>
+            <link name="main_body">
+                <intertial>
+                    <mass>1</mass> <!-- some sort of default value, does it matter? -->
+                    <inertia>
+                        <ixx>0.166667</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>0.166667</iyy>
+                        <iyz>0</iyz>
+                        <izz>0.166667</izz>
+                    </inertia>
+                </intertial>
+                <collision name="main_collision">
+                    <geometry>
+                        <cylinder>
+                            <radius>0.25</radius>
+                            <length>1</length>
+                        </cylinder>
+                    </geometry>
+                    <max_contacts>10</max_contacts><!-- what does this do?-->
+                    <surface>
+                        <contact>
+                            <ode/>
+                        </contact>
+                        <bounce/><!-- what does this do?-->
+                        <friction>
+                            <torsional>
+                                <ode/>
+                            </torsional>
+                            <ode/>
+                        </friction>
+                    </surface>
+                </collision>
+                <visual name='visual'>
+                    <geometry>
+                        <cylinder>
+                            <radius>0.25</radius>
+                            <length>1</length>
+                        </cylinder>
+                    </geometry>
+                    <material name="orange"/>
+                </visual>
+
+                <!-- don't know what these 3 things do -->
+                <self_collide>0</self_collide>
+                <kinematic>0</kinematic>
+                <gravity>1</gravity>
+            </link>
+        </model>
+
+    </world>
+</sdf>
