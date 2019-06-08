@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="cone">
+    <xacro:macro name="cone" params="*origin name:=cone1 x_pos:=0 y_pos:=0 z_pos:=0 radius:=0.25 height:=1 color:=orange"/>
+
+    <!-- include the different colors -->
+    <xacro:include filename="$(find goat_description)/robots/colors.xacro" />
+
+    <model name="${name}"> <!-- use xacro arg 'name' to set the name -->
+        <pose frame="">${x_pos} ${y_pos} ${z_pos + 0.5 * height}</pose>
+        <link name="main_body">
+            <intertial>
+                <mass>1</mass> <!-- some sort of default value, does it matter? -->
+                <inertia>
+                        <ixx>0.166667</ixx>
+                        <ixy>0</ixy>
+                        <ixz>0</ixz>
+                        <iyy>0.166667</iyy>
+                        <iyz>0</iyz>
+                        <izz>0.166667</izz>
+                </inertia>
+            </intertial>
+            <collision name="main_collision">
+                <geometry>
+                    <cylinder>
+                        <radius>${radius}</radius>
+                        <length>${height}</length>
+                    </cylinder>
+                </geometry>
+                <max_contacts>10</max_contacts><!-- what does this do?-->
+                <surface>
+                    <contact>
+                        <ode/>
+                    </contact>
+                    <bounce/><!-- what does this do?-->
+                    <friction>
+                        <torsional>
+                            <ode/>
+                        </torsional>
+                        <ode/>
+                    </friction>
+                </surface>
+            </collision>
+            <visual name='visual'>
+                <geometry>
+                    <cylinder>
+                        <radius>${radius}</radius>
+                        <length>${height}</length>
+                    </cylinder>
+                </geometry>
+                <material name="${color}"/><!-- default to orange -->
+            </visual>
+
+            <!-- don't know what these 3 things do -->
+            <self_collide>0</self_collide>
+            <kinematic>0</kinematic>
+            <gravity>1</gravity>
+        </link>
+    </model>
+
+</robot>

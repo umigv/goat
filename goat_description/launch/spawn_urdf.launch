@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+  <launch>
+
+    <param name="robot_description" command="cat '$(find goat_description)/robots/goat.urdf'" />
+
+    <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" output = "screen" args="-urdf -param robot_description -model goat" />
+  </launch>

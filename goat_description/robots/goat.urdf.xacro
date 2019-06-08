@@ -1,0 +1,326 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="goat">
+    <xacro:arg name="gpu" default="false"/>
+    <xacro:property name="gpu" value="$(arg gpu)" />
+    <!-- no GPU acceleration for us rn :-P -->
+    
+    <xacro:include filename="$(find goat_description)/robots/colors.xacro"/>
+    <xacro:include filename="$(find goat_description)/robots/goat.gazebo"/>
+ 
+    <!-- define base footprint -->
+    <link name="base_footprint" />
+
+    <!-- right between the two encoders  -->
+    <link name="base_link">
+        <inertial>
+            <origin xyz="0 0 0.5" rpy="0 0 0"/>
+            <mass value="1"/>
+            <inertia ixx="100"  ixy="0"  ixz="0" iyy="100" iyz="0" izz="100" />
+        </inertial>
+        <visual>
+            <geometry>
+                <box size="0.01 0.01 0.01"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+    </link>
+
+    <!-- link base of the robot with the footprint -->
+    <joint name="footprint_base_link" type="fixed" >
+        <parent link="base_footprint" />
+        <child link="base_link" />
+        <origin xyz="0 0 0.5" rpy="0 0 0" />
+    </joint>
+
+    <!-- center of the robot, for convenience -->
+    <link name="base_center">
+        <inertial>
+            <origin xyz="0 0 0.5" rpy="0 0 0"/>
+            <mass value="1"/>
+            <inertia ixx="100"  ixy="0"  ixz="0" iyy="100" iyz="0" izz="100" />
+        </inertial>
+        <visual>
+            <geometry>
+                <!-- 20in x 18.7in x 12in -->
+                <box size="0.508 0.475 0.305"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+        <origin xyz="0.2020 0 -0.1"/>
+        <collision>
+            <geometry>
+                <box size="0.762 0.4572 0.3048"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="base_center_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="base_center"/>
+        <origin xyz="-0.2020 0 0.1"/>
+    </joint>
+
+    <link name="base_board">
+        <visual>
+            <geometry>
+                <!-- 8in x 18in x 8in -->
+                <box size="0.203 0.4572 0.203"/>
+            </geometry>
+            <material name="yellow"/>
+        </visual>
+    </link>
+
+    <joint name="base_board_joint" type="fixed">
+        <parent link="base_center"/>
+        <child link="base_board"/>
+        <origin xyz="-0.3556 0 0.07112"/>
+    </joint>
+
+    <!--back wheel joint-->
+    <joint name="back_wheel_joint" type="continuous">
+        <parent link="base_center"/> 
+        <child link="back_wheel"/>
+        <origin rpy="0 0 0" xyz="0 0 -0.1156"/>
+        <dynamics damping="1.0" friction="1.0" />
+    </joint>
+
+    <link name="back_wheel">
+        <visual>
+            <geometry>
+                <!--<cylinder length="0.1016" radius="0.1589"/> -->
+                <sphere radius="0.1589" />
+            </geometry>
+            <material name="black"/>
+            <origin rpy="1.5708 0 0" xyz="-0.5 0 0"/>
+        </visual>
+
+        <collision>
+            <geometry>
+                <!-- <cylinder length="0.1016" radius="0.1589"/> -->
+                <sphere radius="0.1589" />
+            </geometry>
+            <origin rpy="1.5708 0 0" xyz="-0.5 0 0"/>
+        </collision>
+        
+        <inertial>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <mass value="5"/>
+          <inertia
+            ixx=".1" ixy="0.0" ixz="0.0"
+            iyy=".1" iyz="0.0"
+            izz=".1"/>
+        </inertial>
+
+    </link>
+
+    <link name="mid_frame">
+        <visual>
+            <geometry>
+                <!-- 11.8in x 18in x 1.1in -->
+                <box size="0.29972 0.4752 0.02794"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+    </link>
+
+    <joint name="mid_frame_joint" type="fixed">
+        <parent link="base_center"/>
+        <child link="mid_frame"/>
+        <origin xyz="-0.40386 0 -0.04318"/>
+    </joint>
+
+    <link name="bottom_frame">
+        <visual>
+            <geometry>
+                <!-- 16in x 18in x 1.1in -->
+                <box size="0.4064 0.4752 0.02794"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+    </link>
+
+    <joint name="bottom_frame_joint" type="fixed">
+        <parent link="base_center"/>
+        <child link="bottom_frame"/>
+        <origin xyz="-0.4572 0 -0.13716"/>
+    </joint>
+
+    <!-- position between two front wheels - encoders centered around this -->
+    <link name="encoders">
+        <visual>
+            <geometry>
+                <box size="0.03 0.03 0.03"/>
+            </geometry>
+            <material name="redish"/>
+        </visual>
+    </link>
+
+    <joint name="encoders_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="encoders"/>
+        <origin xyz="0 0 0"/>
+    </joint>
+
+    <!-- left wheel joint -->
+    <joint name="left_wheel_joint" type="continuous">
+        <parent link="base_center"/>
+        <child link="left_wheel"/>
+        <axis xyz="1 0 0"/>
+        <origin rpy="0 0 1.5708" xyz="0.2 0.2922 -0.1"/>
+        <limit effort="1000" velocity="100"/>
+        <dynamics damping="1.0" friction="1.0"/>
+    </joint>
+
+    <link name="left_wheel">
+        <visual>
+            <geometry>
+                <cylinder length="0.1016" radius="0.1589"/>
+            </geometry>
+            <material name="black"/>
+            <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+        </visual>
+
+        <collision>
+            <geometry>
+                <cylinder length="0.1016" radius="0.1589"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+        </collision>
+
+        <inertial>
+          <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+          <mass value="5"/>
+          <inertia
+            ixx="0.1" ixy="0.0" ixz="0.0"
+            iyy="0.1" iyz="0.0"
+            izz="0.1"/>
+        </inertial>
+    </link>
+
+    <!-- right wheel joint -->
+    <joint name="right_wheel_joint" type="continuous">
+        <parent link="base_center"/>
+        <child link="right_wheel"/>
+        <axis xyz="1 0 0"/>
+        <origin rpy="0 0 -1.5708" xyz="0.2 -0.2922 -0.1"/>
+        <limit effort="1000" velocity="100"/>
+        <dynamics damping="1.0" friction="1.0"/>
+    </joint>
+
+    <link name="right_wheel">
+        <visual>
+            <geometry>
+                <cylinder length="0.1016" radius="0.1589"/>
+            </geometry>
+            <material name="black"/>
+            <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+        </visual>
+
+        <collision>
+            <geometry>
+                <cylinder length="0.1016" radius="0.1589"/>
+            </geometry>
+            <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+        </collision>
+        <inertial>
+          <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+          <mass value="5"/>
+          <inertia
+            ixx="0.1" ixy="0.0" ixz="0.0"
+            iyy="0.1" iyz="0.0"
+            izz="0.1"/>
+        </inertial>
+    </link>
+    
+
+
+    <link name="top_box">
+        <visual>
+            <geometry>
+                <!-- 12in x 16in x 6.5in -->
+                <box size="0.3048 0.4064 0.1651"/>
+            </geometry>
+            <material name="cyan"/>
+        </visual>
+    </link>
+
+    <joint name="top_box_joint" type="fixed">
+        <parent link="base_center"/>
+        <child link="top_box"/>
+        <origin xyz="0.0508 0 0.23495"/>
+    </joint>
+
+    <link name="front_post">
+        <visual>
+            <geometry>
+                <box size="0.0233 0.0211 0.5112"/>
+            </geometry>
+            <material name="white"/>
+        </visual>
+    </link>
+
+    <joint name="front_post_joint" type="fixed">
+        <parent link="bottom_frame"/>
+        <child link="front_post"/>
+        <origin xyz="-0.1799 0 0.26957"/>
+    </joint>
+
+    <link name="imu">
+        <visual>
+            <geometry>
+                <box size="0.0508 0.0508 0.025"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+    </link>
+
+    <joint name="imu_joint" type="fixed">
+        <parent link="top_box"/>
+        <child link="imu"/>
+        <origin rpy="0 0 3.14159" xyz="-0.12 0 0.0699"/>
+    </joint>
+
+    <link name="zed_center">
+        <visual>
+            <geometry>
+                <box size="0.0381 0.1778 0.0381"/>
+            </geometry>
+            <material name="black"/>
+        </visual>
+    </link>
+
+    <joint name="camera_joint" type="fixed">
+        <parent link="base_center"/>
+        <child link="zed_center"/>
+        <origin xyz="0.23495 0 0.17145"/>
+    </joint>
+
+    <link name="gps">
+        <visual>
+            <geometry>
+                <cylinder length="0.0127" radius="0.0254" />
+            </geometry>
+            <material name="black"/>
+        </visual>
+    </link>
+
+    <joint name="gps_joint" type="fixed">
+        <parent link="front_post"/>
+        <child link="gps"/>
+        <origin xyz="0 0 0.26195"/>
+    </joint>
+
+    <!-- including the LiDAR xacro file and creating an instance of it -->
+    <xacro:include filename="$(find goat_description)/velodyne/velodyne_description/urdf/VLP-16.urdf.xacro"/>
+    <VLP-16 parent="top_box" name="velodyne" topic="/velodyne_points" hz="10" samples="250" gpu="${gpu}">
+        <origin xyz="0 0 0.084" rpy="0 0 0" /> <!-- samples 440-->
+        <!-- the height number needs to be adjusted -->
+    </VLP-16>
+
+    <!-- any idea what this does? it looks important -->
+    <gazebo>
+        <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+            <robotNamespace>/</robotNamespace>
+        </plugin>
+    </gazebo>
+</robot>
