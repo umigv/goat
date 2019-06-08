@@ -1,19 +1,15 @@
 <package format = "2">
 	<name>phidgets_encoder</name>
-	<version>0.2.0</version>
-	<description>
-		Publishes a nav_msgs/Odometry message based on wheel encoder data.
-	</description>
-	<maintainer email="gregjm@umich.edu">Gregory Meyer</maintainer>
+	<version>0.3.0</version>
+	<description>Interface for Phidgets encoder board.</description>
+	<maintainer email="me@gregjm.dev">Gregory Meyer</maintainer>
 	<license>BSD 3-Clause License</license>
 
-	<url type="repository">https://github.com/umigv/phidgets_encoder</url>
+	<url type="repository">https://github.com/umigv/goat</url>
 	<author>Gregory Meyer</author>
 
 	<buildtool_depend>catkin</buildtool_depend>
 
-	<depend>phidgets_api</depend>
 	<depend>roscpp</depend>
 	<depend>sensor_msgs</depend>
-	<depend>umigv_utilities</depend>
 </package>
