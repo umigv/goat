@@ -1,0 +1,12 @@
+<package format="2">
+    <name>goat_description</name>
+    <version>0.1.1</version>
+    <description>URDF for the GOAT.</description>
+    <maintainer email="gregjm@umich.edu">Gregory Meyer</maintainer>
+    <license>BSD 3-Clause License</license>
+
+    <url type="repository">https://github.com/umigv/goat_description</url>
+    <author>Gregory Meyer</author>
+
+    <buildtool_depend>catkin</buildtool_depend>
+</package>
