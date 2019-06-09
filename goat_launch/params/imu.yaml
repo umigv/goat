@@ -14,7 +14,7 @@ complementary_filter_node:
     bias_alpha: 0.01
     do_bias_estimation: true
     do_adaptive_gain: true
-    use_mag: false
+    use_mag: true
     fixed_frame: "odom"
     publish_tf: false
     reverse_tf: false
