@@ -1,10 +1,11 @@
 <launch>
     <include file="$(find goat_launch)/launch/state.launch"/>
     <include file="$(find goat_launch)/launch/imu.launch"/>
-    <include file="$(find goat_launch)/launch/cartographer.launch"/>
-    <include file="$(find goat_launch)/launch/gps.launch"/>
-    <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
-
     <include file="$(find goat_launch)/launch/encoders.launch"/>
+    <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
+    <include file="$(find goat_launch)/launch/gps.launch"/>
+
     <include file="$(find goat_launch)/launch/goat_odom.launch"/>
+
+    <include file="$(find goat_launch)/launch/cartographer.launch"/>
 </launch>
