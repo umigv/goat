@@ -1,6 +1,7 @@
 <launch>
 	<node pkg="locomotor" type="locomotor2" respawn="true" name="locomotor" output="screen">
-		<rosparam file="$(find goat_launch)/params/locomotor_params.yaml" command="load" ns="global_costmap"/>
-		<rosparam file="$(find goat_launch)/params/costmap_common_params.yaml" command="load" ns="locomotor/costmap/global_costmap/global"/>
+		<rosparam file="$(find goat_launch)/params/locomotor_params.yaml" command="load"/>
+		<rosparam file="$(find goat_launch)/params/costmap_common_params.yaml" command="load" ns="global_costmap/global"/>
+		<rosparam file="$(find goat_launch)/params/costmap_common_params.yaml" command="load" ns="local_costmap/local"/>
 	</node>
 </launch>
