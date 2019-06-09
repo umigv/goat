@@ -1,8 +1,0 @@
-<launch>
-    <include file="$(find goat_launch)/launch/camera.launch"/>
-    <include file="$(find goat_launch)/launch/encoders.launch"/>
-    <include file="$(find goat_launch)/launch/gps.launch"/>
-
-    <node name="obstacle_detector_node" pkg="obstacle_detector"
-          type="obstacle_detector_node" output="screen" clear_params="true"/>
-</launch>

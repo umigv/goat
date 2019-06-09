@@ -1,0 +1,6 @@
+<launch>
+    <include file="$(find goat_launch)/launch/nuc_competition_combined.launch"/>
+
+    <node name="rviz" pkg="rviz" type="rviz" required="true"
+        args="-d $(find goat_launch)/config/demo_3d.rviz" />
+</launch>
