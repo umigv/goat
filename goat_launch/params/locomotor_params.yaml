@@ -3,7 +3,7 @@ use_latest_pose: true
 global_costmap_class: nav_core_adapter::CostmapAdapter
 local_costmap_class: nav_core_adapter::CostmapAdapter
 global_costmap:
-  plugins: {type: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer", name: global_rgbd_obstacle_layer}
+  plugins: {type: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer", name: global_obstacle_layer}
   global:
     potential_calculator: dlux_plugins::AStar
     traceback: dlux_plugins::GradientPath
@@ -21,7 +21,7 @@ local_costmap:
   debug_trajectory_details: false
   trajectory_generator_name: base_local_planner
   goal_checker_name: dwb_plugins::SimpleGoalChecker
-  plugins: {type: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer", name: local_rgbd_obstacle_layer}
+  plugins: {type: "spatio_temporal_voxel_layer/SpatioTemporalVoxelLayer", name: local_obstacle_layer}
   local_rgbd_obstacle_layer:
     voxel_decay: 15   # seconds if linear, e^n if exponential
 local_planner:
