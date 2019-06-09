@@ -1,10 +1,9 @@
 <launch>
-    <arg name="serial" default="/dev/ttyUSB0"/>
-    <arg name="port" default="4000"/>
+    <node name="launchGPS" pkg="goat_launch" type="launchGPS.sh" output="screen"/>
 
     <node name="gpsd_client" pkg="gpsd_client"
           type="gpsd_client" output="screen" clear_params="true">
-          <param name="port" value="$(arg port)"/>
+          <param name="port" value="4000"/>
 	  <remap from="fix" to="gps/fix"/>
     </node>
 
