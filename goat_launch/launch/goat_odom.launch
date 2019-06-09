@@ -3,7 +3,5 @@
     <rosparam command="load" file="$(find goat_launch)/params/goat_odom.yaml" />
 
     <remap from="cmd_vel" to="cmd_vel_odom"/>
-
-
   </node>
 </launch>
