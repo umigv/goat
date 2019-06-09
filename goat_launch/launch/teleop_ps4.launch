@@ -16,4 +16,6 @@
     <node name="teleop_node" pkg="teleop_twist_joy" type="teleop_node" required="true" output="screen">
         <remap from="cmd_vel" to="teleop/cmd_vel"/>
     </node>
+
+    <node name="cmd_vel_selector_node" pkg="cmd_vel_selector" required="true" output="screen"/>
 </launch>
