@@ -1,16 +1,11 @@
-<!-- runs nmea_serial_driver and navsat_transform_node -->
 <launch>
-    <arg name="port" default="/dev/ttyUSB0"/>
-    <arg name="baud" default="9600"/>
+    <arg name="serial" default="/dev/ttyUSB0"/>
+    <arg name="port" default="4000"/>
 
-    <rosparam command="load" file="$(find goat_launch)/params/gps.yaml"/>
-
-    <!-- not required, could be simulating -->
-    <node name="nmea_serial_driver" pkg="nmea_navsat_driver"
-          type="nmea_serial_driver" output="screen" clear_params="true">
+    <node name="gpsd_client" pkg="gpsd_client"
+          type="gpsd_client" output="screen" clear_params="true">
           <param name="port" value="$(arg port)"/>
-          <param name="baud" value="$(arg baud)"/>
-          <remap from="fix" to="gps/fix"/>
+	  <remap from="fix" to="gps/fix"/>
     </node>
 
     <node name="navsat_transform_node" pkg="robot_localization"
