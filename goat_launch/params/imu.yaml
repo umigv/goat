@@ -1,6 +1,6 @@
 phidgets_imu_node:
     frame_id: imu_ned
-    period: 8.0
+    period: 8 # 125 Hz
     angular_velocity_stdev: 0.0102974425867665445
     linear_acceleration_stdev: 0.02745862
     magnetic_field_stdev: 0.00000012
