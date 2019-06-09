@@ -7,8 +7,10 @@
     <rosparam command="load" file="$(find goat_launch)/params/state.yaml"/>
 
     <node name="joint_state_publisher" pkg="joint_state_publisher"
-          type="joint_state_publisher" output="screen" clear_params="true"/>
+          type="joint_state_publisher" output="screen" clear_params="true"
+          respawn="true"/>
 
     <node name="robot_state_publisher" pkg="robot_state_publisher"
-          type="robot_state_publisher" output="screen" clear_params="true"/>
+          type="robot_state_publisher" output="screen" clear_params="true"
+          respawn="true"/>
 </launch>

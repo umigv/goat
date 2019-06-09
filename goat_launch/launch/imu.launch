@@ -2,15 +2,15 @@
 <launch>
     <rosparam command="load" file="$(find goat_launch)/params/imu.yaml"/>
 
-    <!-- not required, could be simulating -->
     <node name="phidgets_imu_node" pkg="phidgets_imu"
-          type="phidgets_imu_node" output="screen" clear_params="true">
+          type="phidgets_imu_node" output="screen" clear_params="true"
+          respawn="true">
         <remap from="imu/data_raw" to="imu/data_raw_ned"/>
         <remap from="imu/mag" to="imu/mag_ned"/>
     </node>
 
     <node name="transform_imu_node" pkg="transform_imu"
-          type="transform_imu_node" output="screen" required="true"
+          type="transform_imu_node" output="screen" respawn="true"
           clear_params="true">
         <remap from="imu/data_raw" to="imu/data_raw_ned"/>
         <remap from="imu/mag" to="imu/mag_ned"/>
@@ -20,10 +20,10 @@
     </node>
 
     <node name="complementary_filter_node" pkg="imu_complementary_filter"
-          type="complementary_filter_node" output="screen" required="true"
+          type="complementary_filter_node" output="screen" respawn="true"
           clear_params="true"/>
 
     <node name="imu_temporal_filter_node" pkg="imu_temporal_filter"
-          type="imu_temporal_filter_node" output="screen" required="true"
+          type="imu_temporal_filter_node" output="screen" respawn="true"
           clear_params="true"/>
 </launch>

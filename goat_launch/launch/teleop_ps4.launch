@@ -5,17 +5,21 @@
 
     <rosparam command="load" file="$(find goat_launch)/params/teleop_ps4.yaml"/>
 
-    <node name="serial_node" pkg="rosserial_python" type="serial_node.py" required="true" output="screen">
+    <node name="serial_node" pkg="rosserial_python" type="serial_node.py"
+          respawn="true" output="screen">
         <param name="port" value="$(arg serial_port)"/>
     </node>
 
-    <node name="joy_node" pkg="joy" type="joy_node" required="true" output="screen">
+    <node name="joy_node" pkg="joy" type="joy_node" respawn="true"
+          output="screen">
         <param name="dev" value="$(arg joy_device)"/>
     </node>
 
-    <node name="teleop_node" pkg="teleop_twist_joy" type="teleop_node" required="true" output="screen">
+    <node name="teleop_node" pkg="teleop_twist_joy" type="teleop_node"
+          respawn="true" output="screen">
         <remap from="cmd_vel" to="teleop/cmd_vel"/>
     </node>
 
-    <node name="cmd_vel_selector_node" pkg="cmd_vel_selector" required="true" output="screen"/>
+    <node name="cmd_vel_selector_node" pkg="cmd_vel_selector"
+          respawn="true" output="screen"/>
 </launch>
