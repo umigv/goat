@@ -1,22 +1,21 @@
-locomotor:
-  global_planner_namespaces: [dlux]
-  dlux:
-    plugin_class: dlux_global_planner::DluxGlobalPlanner
-    potential_calculator: dlux_plugins::AStar
-    traceback: dlux_plugins::GradientPath
-    path_caching: false
-    improvement_threshold: -1.0
-    publish_potential: false
-    print_statistics: false
-  local_planner_namespaces: [dwb]
-  dwb:
-      plugin_class: dwb_local_planner::DwbLocalPlanner
-      update_costmap_before_planning: true
-      prune_plan: true
-      short_circuit_trajectory_evaluation: true
-      debug_trajectory_details: false
-      trajectory_generator_name: base_local_planner
-      goal_checker_name: dwb_plugins::SimpleGoalChecker  
+global_planner_namespaces: [dlux]
+dlux:
+  plugin_class: dlux_global_planner::DluxGlobalPlanner
+  potential_calculator: dlux_plugins::AStar
+  traceback: dlux_plugins::GradientPath
+  path_caching: false
+  improvement_threshold: -1.0
+  publish_potential: false
+  print_statistics: false
+local_planner_namespaces: [dwb]
+dwb:
+    plugin_class: dwb_local_planner::DwbLocalPlanner
+    update_costmap_before_planning: true
+    prune_plan: true
+    short_circuit_trajectory_evaluation: true
+    debug_trajectory_details: false
+    trajectory_generator_name: base_local_planner
+    goal_checker_name: dwb_plugins::SimpleGoalChecker
 robot_base_frame: base_link
 use_latest_pose: true
 global_costmap_class: nav_core_adapter::CostmapAdapter
