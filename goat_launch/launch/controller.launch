@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="controller_manager" type="spawner" args="diff_drive_controller"/>
+  <rosparam file="$(find goat_launch)/params/controller_params.yaml" command="load"/>
+</launch>
