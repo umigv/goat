@@ -1,7 +1,7 @@
 <!-- launches serial_node, joy_node, and teleop_node -->
 <launch>
     <arg name="serial_port" default="/dev/ttyACM0"/>
-    <arg name="joy_device" default="/dev/input/js1"/>
+    <arg name="joy_device" default="/dev/input/js0"/>
 
     <rosparam command="load" file="$(find goat_launch)/params/teleop_ps4.yaml"/>
 
