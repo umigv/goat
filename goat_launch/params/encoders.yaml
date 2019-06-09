@@ -1,5 +1,5 @@
 phidgets_encoder_node:
-    rate: 20
+    rate: 50
     counts_per_revolution: [1440, 1440]
     names: ["left_wheel_joint", "right_wheel_joint"]
 
@@ -7,7 +7,7 @@ encoder_odometry_node:
     frame_id: "encoders"
     left_wheel_frame: "left_wheel_joint"
     right_wheel_frame: "right_wheel_joint"
-    rate: 20
+    rate: 50
     diameter: 0.3048 # 12"
     track: 0.619125 # 24 3/8"
     covariance: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
