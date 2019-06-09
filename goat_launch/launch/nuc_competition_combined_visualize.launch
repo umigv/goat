@@ -1,0 +1,20 @@
+<launch>
+    <include file="$(find goat_launch)/launch/state.launch"/>
+    <include file="$(find goat_launch)/launch/imu.launch"/>
+    <include file="$(find goat_launch)/launch/cartographer.launch"/>
+    <include file="$(find velodyne_pointcloud)/launch/VLP16_points.launch"/>
+
+    <include file="$(find goat_launch)/launch/encoders.launch"/>
+    <include file="$(find goat_launch)/launch/goat_odom.launch"/>
+
+    <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
+        type="cartographer_occupancy_grid_node" args="-resolution 0.05" />
+
+    <node name="rviz" pkg="rviz" type="rviz" required="true"
+        args="-d $(find goat_launch)/config/demo_3d.rviz" />
+  
+    <node name="costmap_2d_markers" pkg="costmap_2d" type="costmap_2d_markers">
+	<remap from="voxel_grid" to="/move_base/local_costmap/obstacles/voxel_grid" />
+    </node>
+
+</launch>
