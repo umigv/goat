@@ -14,8 +14,6 @@ locomotor:
     improvement_threshold: -1.0
     publish_potential: false
     print_statistics: false
-    global_rgbd_obstacle_layer:
-      voxel_decay: 40    # seconds if linear, e^n if exponential
   local_costmap:
     update_costmap_before_planning: true
     prune_plan: true

@@ -35,7 +35,7 @@ costmap:
       clearing: false
       max_z: 8.0                  # default 0, meters
       min_z: 0.3                  # default 10, meters
-      vertical_fov_angle: 30   # default 0.7, radians. For 3D lidars it's the symmetric FOV about the planar axis.
-      horizontal_fov_angle: 120  
+      vertical_fov_angle: 0.523599   # default 0.7, radians. For 3D lidars it's the symmetric FOV about the planar axis.
+      horizontal_fov_angle: 2.0944  
       decay_acceleration: 0     # default 0, 1/s^2. 
       model_type: 0               # default 0, model type for frustum. 0=depth camera, 1=3d lidar like VLP16 or similar
