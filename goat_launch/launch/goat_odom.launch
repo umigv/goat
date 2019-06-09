@@ -4,10 +4,6 @@
 
     <remap from="cmd_vel" to="cmd_vel_odom"/>
 
-    <!--  Placeholder for output topic remapping
-    <remap from="odometry/filtered" to=""/>
-    <remap from="accel/filtered" to=""/>
-    -->
 
   </node>
 </launch>
