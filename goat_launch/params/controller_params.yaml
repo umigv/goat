@@ -8,8 +8,6 @@ mobile_base_controller:
   linear:
     x:
       has_velocity_limits: true
-      max_velocity: 2.0
-      min_velocity: -2.0
+      max_velocity: 2.2
       has_acceleration_limits: true
-      max_acceleration: 0.5
-      min_acceleration: -0.5
+      max_acceleration: 22.0
