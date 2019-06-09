@@ -1,5 +1,5 @@
 locomotor:
-  robot_base_frame: base_center_link
+  robot_base_frame: base_link
   use_latest_pose: true
   global_costmap_class: nav_core_adapter::CostmapAdapter
   local_costmap_class: nav_core_adapter::CostmapAdapter
