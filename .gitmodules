@@ -1,3 +1,6 @@
-[submodule "whiteLineDetection/simt_tf"]
-	path = whiteLineDetection/simt_tf
-	url = https://github.com/Gregory-Meyer/simt_tf.git
+[submodule "path_planning/occupancy_grid_test_data_generator/yaml-cpp"]
+	path = path_planning/occupancy_grid_test_data_generator/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp/
+[submodule "path_planning/goatcontrol_integrated/catch2/Catch2"]
+	path = path_planning/goatcontrol_integrated/catch2/Catch2
+	url = https://github.com/catchorg/Catch2

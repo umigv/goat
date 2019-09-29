@@ -1,0 +1,4 @@
+controller_list:
+  - name: fake_goat_controller
+    joints:
+      []

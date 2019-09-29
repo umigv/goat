@@ -1,0 +1,10 @@
+base_local_planner: nav_core_adapter::LocalPlannerAdapter
+LocalPlannerAdapter:
+  planner_name: dwb_local_planner::DWBLocalPlanner
+DWBLocalPlanner:
+  max_speed_xy: 2.2
+base_global_planner: nav_core_adapter::GlobalPlannerAdapter
+GlobalPlannerAdapter:
+  planner_name: dwb_global_planner::DWBGlobalPlanner
+DWBGlobalPlanner:
+  max_speed_xy: 2.2
