@@ -1,0 +1,18 @@
+<package format="2">
+    <name>motor_cmds</name>
+    <version>0.1.1</version>
+    <description>Node for sending motor comand through topic /cmd_vel</description>
+    <maintainer email="eltonlin@umich.edu">Elton Lin</maintainer>
+    <license>BSD 3-Clause License</license>
+
+    <url type="repository">https://github.com/umigv/goat</url>
+    <author>Elton Lin</author>
+    <author>Sean Oliver</author>
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <depend>geometry_msgs</depend>
+    <depend>roscpp</depend>
+    <depend>umigv_utilities</depend>
+
+</package>
