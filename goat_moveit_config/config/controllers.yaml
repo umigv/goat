@@ -1,0 +1,7 @@
+controller_list:
+ - name: goat_controller
+   action_ns: follow_joint_trajectory
+   type: FollowJointTrajectory
+   default: true
+   joints:
+     - base_center_joint

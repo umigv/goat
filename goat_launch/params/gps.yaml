@@ -7,7 +7,8 @@ navsat_transform_node:
     magnetic_declination_radians: 0.123045712265600235
     yaw_offset: 1.5707963267948966
     zero_altitude: true
-    publish_filtered_gps: true
+    publish_filtered_gps: false
     broadcast_utm_transform: true
     use_odometry_yaw: false
     wait_for_datum: false
+    broadcast_utm_transform_as_parent_frame: false

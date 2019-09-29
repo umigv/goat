@@ -1,0 +1,170 @@
+#include "WhiteLineDetection.h"
+//#include "ros/ros.h"
+bool DetectWhiteLines::initCamera()
+{
+   initParameters.camera_resolution = RESOLUTION_HD720;
+   initParameters.depth_mode = DEPTH_MODE_PERFORMANCE;
+   initParameters.coordinate_system = COORDINATE_SYSTEM_IMAGE;
+   initParameters.coordinate_units = UNIT_METER;
+
+   ERROR_CODE err = zed.open(initParameters);
+   if(err != SUCCESS)
+   {
+     cerr << err << "\n";
+     zed.close();
+     return false;
+   }
+   //cout << "CAMERA INITIALIZED\n";
+   return true;
+}
+
+bool DetectWhiteLines::loadPointCloud()
+{
+  ERROR_CODE erg = zed.grab();
+  if(erg == SUCCESS)
+  {
+    zed.retrieveMeasure(point_cloud,MEASURE_XYZRGBA);
+    return true;
+  }
+  return false;
+}
+
+
+double DetectWhiteLines::findMinX()
+{
+  sl::float4 currPoint;
+  double minX = MAX_X_VALUE;
+   for(int i = 0; i < HEIGHT; ++i)
+   {
+	point_cloud.getValue(i,0,&currPoint);
+	if(isValidPoint(currPoint.x,true))	
+	   minX = currPoint.x;
+   }
+   if(minX < 0) minX *= -1;
+   return minX;
+}
+
+
+bool DetectWhiteLines::isValidPoint(float & currVal, bool isX)
+{
+  if(isX)
+    return (!isnan(currVal) && !isinf(currVal) && currVal < MAX_X_VALUE \
+	    && currVal > MIN_X_VALUE);
+  else
+    return (!isnan(currVal) && !isinf(currVal) && currVal < MAX_Z_VALUE && \
+	    currVal > MIN_Z_VALUE);  
+}
+
+
+
+
+void DetectWhiteLines::convertXZ()
+{
+   cout << quat.getAngle() << endl;
+   sl::float4 currPoint;
+   tf2::Vector3  xyz;
+   for(size_t i = 0; i < HEIGHT; ++i)
+   {
+      for(size_t j = 0; j < WIDTH; ++j)
+      {
+          point_cloud.getValue(i,j,&currPoint);
+	  xyz[0] = currPoint.x;
+	  xyz[1] = currPoint.y;
+	  xyz[2] = currPoint.z;
+	  tf2::Transform transform(quat);
+	  //tf2::Vector3 result = transform * xyz;
+//	  cout <<"ORIG " << xyz[0] << " " << xyz[2] <<  " TRANSFORM " << result[0] << " " << result[2] << endl;
+	  xyz = transform * xyz;
+	  
+          int print = 0;
+          if(isValidPoint(currPoint.x,true))
+          {
+	     xyz[0] = static_cast<int>((currPoint.x + SHIFTVAL ) / XDIVISOR);
+	     print++;
+          }
+          if(isValidPoint(currPoint.z,false))
+          {
+	     xyz[2] = static_cast<int>(currPoint.z / ZDIVISOR);
+	     print++;
+          }
+
+	  xyz[1] = 0;
+	  
+	  if(print == 2)
+	  {
+	    
+	    //tf2::Transform transform(quat);
+	    //tf2::Vector3 result = transform * xyz;
+	    //cout <<"ORIG " << xyz[0] << " " << xyz[2] <<  " TRANSFORM " << result[0] << " " << result[2] << endl;
+
+	     Rgba color = unpack_float(currPoint.w);
+	     uchar r = uchar(color.r);
+	     uchar b = uchar(color.b);
+	     uchar g = uchar(color.g);
+
+	     cv::Vec3b val = xzMat.at<cv::Vec3b>(cv::Point(xyz[0],xyz[2]));
+	     val[0] = b;
+	     val[1] = g;
+	     val[2] = r;
+	     xzMat.at<cv::Vec3b>(cv::Point(xyz[0],xyz[2])) = {b,g,r};
+	  }
+	  print = 0;
+      }
+   }
+ }
+
+
+void DetectWhiteLines::whiteLineDetection()
+{
+      cv::Size s = xzMat.size();
+      outputImage = cv::Mat(s, CV_8UC3, cv::Scalar(0,0,0));
+      cv::cvtColor(xzMat,xzMat,CV_BGR2GRAY);
+      //cv::resize(xzMat,xzMat,cv::Size(134,200),cv::INTER_LANCZOS4);
+      cv::threshold(xzMat,xzMat,170,255,cv::THRESH_BINARY);
+      vector<cv::Vec4i> lines;
+      cv::HoughLinesP(xzMat,lines,1,CV_PI/180,20,10,1);
+      for( const auto& i : lines)
+      {
+        line(outputImage,cv::Point(i[0],i[1]),cv::Point(i[2],i[3]),cv::Scalar(255,255,255),2);
+      }
+      //cv::resize(outputImage,outputImage,s,cv::INTER_LANCZOS4);
+}
+
+void DetectWhiteLines::imuTransform(const sensor_msgs::ImuConstPtr &imu)
+{
+  tf2Scalar arr[4] = {imu->orientation.x,imu->orientation.y,imu->orientation.z,imu->orientation.w};
+  quat = tf2::Quaternion(arr[0],arr[2],arr[2],arr[3]);
+}
+
+DetectWhiteLines::DetectWhiteLines(const DetectWhiteLines & other ) : it{other.node}
+{
+  pub = other.pub;
+  xzMat = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
+  outputImage = cv::Mat(WIDTH, HEIGHT, CV_8UC3, cv::Scalar(0,0,0));
+}
+
+void DetectWhiteLines::detect(const ros::TimerEvent&)
+{
+  bool test = initCamera();
+  if(test)
+  {
+    bool value = loadPointCloud();
+    if(value)
+    {
+      double val = findMinX();
+      cout << val << endl;
+      convertXZ();
+      displayXZ(10);
+    
+      whiteLineDetection();
+      displayWL(10);
+    
+      
+      sensor_msgs::ImagePtr im = cv_bridge::CvImage(std_msgs::Header(), "bgr8", outputImage).toImageMsg();
+      pub.publish(im);
+    
+      zed.close();
+      clearXZ();
+    }
+  }
+}

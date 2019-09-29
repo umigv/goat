@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>sim_instr</name>
+  <version>0.1.1</version>
+  <description>Publishes ROS Nodes containing velocity information from a file</description>
+
+  <maintainer email="snoliver@umich.edu">Sean Oliver</maintainer>
+  <maintainer email="adortz@umich.edu">Alexandra Dortzbach</maintainer>
+
+
+  <license>BSD 3-Clause License</license>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>geometry_msgs</depend>
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+
+
+  <url type="repository">https://github.com/umigv/goat.git</url>
+
+
+</package>

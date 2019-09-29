@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="example">
+  <xacro:arg name="gpu" default="false"/>
+  <xacro:property name="gpu" value="$(arg gpu)" />
+
+  <!-- Base Footprint -->
+  <link name="ex_base_footprint" />
+
+  <!-- Base Link -->
+  <joint name="footprint" type="fixed" >
+   <parent link="ex_base_footprint" />
+    <child link="ex_base_link" />
+    <origin xyz="0 0 0.05" rpy="0 0 0" />
+  </joint>
+  <link name="ex_base_link" >
+    <visual>
+      <geometry>
+        <box size="0.005 0.005 0.001" />
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.005 0.005 0.001" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0"/>
+      <mass value="10"/>
+      <inertia ixx="3.0" ixy="0.0" ixz="0.0"
+               iyy="3.0" iyz="0.0" 
+               izz="3.0" />
+    </inertial>
+  </link>
+
+  <xacro:include filename="$(find goat_description)/velodyne/velodyne_description/urdf/VLP-16.urdf.xacro"/>
+  <VLP-16 parent="ex_base_link" name="velodyne" topic="/velodyne_points" hz="10" samples="250" gpu="${gpu}">
+    <origin xyz="0 0 0.4" rpy="0 0 0" /> <!-- samples 440-->
+  </VLP-16>
+
+  <!-- adding this to include goat.urdf-->
+  <xacro:include filename="$(find goat_description)/robots/goat.urdf"/>
+  
+
+  
+</robot>

@@ -1,22 +1,20 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.14)
 
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
-project(phidgets_encoder)
+project(phidgets_encoder VERSION 0.3.0)
 
-find_package(catkin REQUIRED COMPONENTS phidgets_api roscpp sensor_msgs
-										umigv_utilities)
-										
-catkin_package(CATKIN_DEPENDS phidgets_api roscpp sensor_msgs umigv_utilities)
+find_package(Phidget22 REQUIRED)
+find_package(catkin REQUIRED COMPONENTS roscpp sensor_msgs)
 
-include_directories(include/ ${catkin_INCLUDE_DIRS})
+catkin_package(CATKIN_DEPENDS roscpp sensor_msgs)
 
-add_executable(phidgets_encoder_node src/phidgets_encoder_node.cpp
-               src/encoder_state_publisher.cpp)
-target_link_libraries(phidgets_encoder_node ${catkin_LIBRARIES})
+add_executable(phidgets_encoder_node src/encoder.cpp src/node.cpp)
+target_include_directories(phidgets_encoder_node PRIVATE ${catkin_INCLUDE_DIRS})
+target_link_libraries(phidgets_encoder_node ${catkin_LIBRARIES}
+                                            Phidget22::Phidget22)
 add_dependencies(phidgets_encoder_node ${catkin_EXPORTED_TARGETS})
+target_compile_features(phidgets_encoder_node PRIVATE cxx_std_14)
 
 install(TARGETS phidgets_encoder_node
         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
