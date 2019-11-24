@@ -3,9 +3,17 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/Quaternion.h>
+#include <nav_msgs/Odometry.h>
 #include <tf/tf.h>
 #include <vector>
 #include <math.h>
+
+// This node publishes /cmd_vel as motor commands and subscribe to /Pose to get feedback
+// To run this node, one should type:
+// rosrun motor_cmds motor_cmds_node _initial_x:=<x value> _initial_y:=<y value>
+// the typical template is: rosrun <package> <node> _<param1>:=<value1> _<param2>:=<value2>
+
+// for running simulation on Gazebo - need to run adjust_ori node, and subscribe to /odom instead
 
 int signum_double(double val){
     return (0 < val) - (val < 0);
@@ -66,11 +74,17 @@ class Robot{
             kAngle_threshold = nh.param("angle_threshold", M_PI/16);
             kLinear_magnitude = nh.param("linear_magnitude", 10);
         }
-    	void get_pose_callback(geometry_msgs::Pose& msg) {
+    	void get_pose_callback(const geometry_msgs::Pose& msg) {
 
     		current_pos = msg.position;
     		current_orientation = msg.orientation;
     	}
+
+        void get_odom_callback(const nav_msgs::Odometry& msg) {
+            current_pos = msg.pose.pose.position;
+            current_orientation = msg.pose.pose.orientation;
+        }
+
         bool target_ahead(const geometry_msgs::Point& target){
             if(point_eq(target, current_pos)){
                 return false;
@@ -101,11 +115,26 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "motor_cmds");
     ros::NodeHandle nh_pub;
     ros::NodeHandle nh_priv("~");
+
     ros::Publisher pub = nh_pub.advertise<geometry_msgs::Twist>("cmd_vel", 1000);
-    std::vector<geometry_msgs::Point> path;
+
+    // have fake path for testing - the actual path is given from A*
+    geometry_msgs::Point p1;
+    geometry_msgs::Point p2;
+    p1.x = 5;
+    p1.y = 5;
+    // p2.x = 10;
+    // p2.y = 10;
+    // geometry_msgs::Point p3;
+    // p3.x = 20;
+    // p3.y = 15;
+    std::vector<geometry_msgs::Point> path{p1/*, p2, p3*/};
+
+    //std::vector<geometry_msgs::Point> path;
     auto target_it = path.begin();
 
     Robot my_bot{nh_priv};
+    // the actual subscriber is to "Pose", which should be published by the sensors team
     ros::Subscriber sub = nh_pub.subscribe("Pose", 1000, &Robot::get_pose_callback, &my_bot); // need to update topic name 
 
     const double time_step = nh_priv.param("time_step", 0.05);
@@ -127,4 +156,5 @@ int main(int argc, char** argv){
         ros::Timer timer = nh_priv.createTimer(ros::Duration(time_step), callback);
         ros::spin();
     }
+    return 0;
 }
