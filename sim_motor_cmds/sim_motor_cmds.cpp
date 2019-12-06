@@ -70,12 +70,14 @@ class Robot{
 
             if(point_eq()){
                 ROS_INFO_STREAM("target is same point as current");
+                //++path_index;
                 return false;
             }
-            double angle = get_angle_to_target(target);
-            ROS_INFO_STREAM("angle to target: ");
-            ROS_INFO_STREAM(angle);
-            return (angle > (-1 * M_PI / 2) && angle < M_PI / 2);
+            return true;
+            //double angle = get_angle_to_target(target);
+            //ROS_INFO_STREAM("angle to target: ");
+            //ROS_INFO_STREAM(angle);
+            //return (angle > (-1 * M_PI / 2) && angle < M_PI / 2);
         }
 
         // double get_target_angle(const geometry_msgs::Point& target) {
@@ -100,7 +102,7 @@ class Robot{
             // kInitial_heading = tf::Vector3{initial_heading_x, initial_heading_y, initial_heading_z};
             // kRotation_magnitude = nh.param("rotation_magnitude", 10);
 
-            kAngle_threshold = nh.param("angle_threshold", M_PI/32);
+            kAngle_threshold = nh.param("angle_threshold", M_PI/128);
             robot_pub = pub;
             path = p;
             path_size = path.size();
@@ -113,15 +115,20 @@ class Robot{
             // init target_it = path.begin() in ctor
             // find the next ahead target
 
-            while(path_index <= path_size) {
+            while(path_index < path_size) {
                 if(target_ahead(path.at(path_index))) {
                     break;
                 }
                 else {
-                    ++path_index;
+                    if(++path_index == path_size) {
+                        ROS_INFO_STREAM("reached all targets");
+
+                        ros::shutdown();
+                        exit(0);
+                    }
                 }
             }
-            // here target_it points to the next target
+            
     		current_pos.x = msg.x; // should be before while loop
             current_pos.y = msg.y;
             current_theta = msg.theta;
@@ -153,6 +160,8 @@ class Robot{
             double ang_to_target = get_angle_to_target(target_point);
 
             if(fabs(ang_to_target) > kAngle_threshold) {
+                ROS_INFO_STREAM(ang_to_target);
+                ROS_INFO_STREAM("-------------------------------------");
                 geometry_msgs::Twist t;
                 t.angular.z = 1 * signum_double(ang_to_target);
                 robot_pub.publish(t);
