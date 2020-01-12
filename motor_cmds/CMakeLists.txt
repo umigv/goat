@@ -9,6 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   geometry_msgs
+  message_generation
 )
 
 include_directories(
@@ -16,11 +17,32 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-catkin_package()
 
-add_executable(${PROJECT_NAME}_node motor_cmds.cpp)
+
+
+
+add_message_files(
+  FILES
+  path.msg
+)
+
+generate_messages(
+  DEPENDENCIES
+  geometry_msgs
+)
+
+catkin_package(
+  CATKIN_DEPENDS message_runtime
+  CATKIN_DEPENDS geometry_msgs
+)
+
+add_executable(${PROJECT_NAME}_node src/motor_cmds.cpp)
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+
+
+
 
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}

@@ -18,7 +18,7 @@ include_directories(
 
 catkin_package()
 
-add_executable(${PROJECT_NAME}_node sim_motor_cmds.cpp)
+add_executable(${PROJECT_NAME}_node src/sim_motor_cmds.cpp)
 
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
