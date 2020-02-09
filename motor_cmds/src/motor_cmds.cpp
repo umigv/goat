@@ -2,7 +2,6 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
-//#include <turtlesim/Pose.h>
 #include <geometry_msgs/Quaternion.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/tf.h>
@@ -10,8 +9,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <fstream>
-#include <motor_cmds/path.h>
-
+#include <nav_msgs/Path.h>
+#include <geometry_msgs/PoseStamped.h>
 // This node is for sending motor commands to a robot simulation in Gazebo
 // Gazebo spits out /odom
 
@@ -27,9 +26,6 @@
 // sub: nav_msgs/Odometry.h
 // pub: cmd_vel (geometry_msgs/Twist.h)
 
-#include <std_msgs/String.h>
-
-std_msgs::String msg;
 
 int signum_double(double val){
     return (0 < val) - (val < 0);
@@ -47,8 +43,7 @@ class Robot{
         geometry_msgs::Point current_pos; 
         double current_theta = 0;
         double kAngle_threshold;
-        double turn_rate;
-        double linear_rate;
+        double turn_rate, linear_rate;
         size_t path_size;
         size_t path_index = 0; // to keep track the current target
 
@@ -72,9 +67,6 @@ class Robot{
             path = p;
             path_size = path.size();
 
-            // ROS_INFO_STREAM("path size is: ");
-            // ROS_INFO_STREAM(path_size);
-            // kLinear_magnitude = nh.param("linear_magnitude", 10);
         } // Robot()
 
         // update the pose
@@ -112,42 +104,18 @@ class Robot{
         }
 
         // update the path and reset to read from begining
-        void path_callback(const motor_cmds::path &msg) {
-            path = msg.data;
+        void path_callback(const nav_msgs::Path &msg) {
+
+        	// msg.poses is type <PoseStamped[]>
+        	path.clear();
+        	for(auto pose: msg.poses) {
+
+        		path.push_back(pose.pose.position);
+        	}
             path_index = 0;
         }
 
-        // update pose then genearte next /cmd_vel
-        // void callback(const nav_msgs::Odometry &msg) {
-
-        //     current_pos.x = msg.pose.pose.position.x; // should be before while loop
-        //     current_pos.y = msg.pose.pose.position.y;
-
-
-        //     // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
-        //     tf::Quaternion quat;
-        //     tf::quaternionMsgToTF(msg.pose.pose.orientation, quat);
-
-        //     // the tf::Quaternion has a method to acess roll pitch and yaw
-        //     double roll, pitch, yaw;
-        //     tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
-        //     current_theta = yaw; // ignore roll and pitch assume road is flat
-
-        //     ROS_INFO_STREAM("updating pose");
-        //     ROS_INFO_STREAM(current_pos.x);
-        //     ROS_INFO_STREAM(current_pos.y);
-        //     ROS_INFO_STREAM(current_theta);
-
-
-        //     // path planning here? (not good, prolly should be another callback) update the vector
-        //     // rate of updating pose == rate of A* ??
-        //     // path_index = 0
-
-        //     geometry_msgs::Point target = get_next_target();
-
-        //     approach_target(target);
-        // } // callback()
-
+        
 
 
         void approach_target(geometry_msgs::Point &t) {
@@ -175,10 +143,6 @@ class Robot{
 
             delta_x = temp_x;
             delta_y = temp_y;
-
-            // ROS_INFO_STREAM("dx, dy");
-            // ROS_INFO_STREAM(delta_x);
-            // ROS_INFO_STREAM(delta_y);
 
             // atan > 0 -- turn left, atan < 0 -- turn right
             double ang_to_target = atan(delta_y / delta_x);
@@ -217,8 +181,6 @@ class Robot{
 
             // only check x, not robust but theoretically works
             double delta_x = t.x - current_pos.x;
-            // ROS_INFO_STREAM("delta x");
-            // ROS_INFO_STREAM(delta_x);
             return fabs(delta_x) > 0.01;
 
         } // target_ahead()
@@ -253,33 +215,17 @@ class Robot{
 
 int main(int argc, char** argv){
 
-    ros::init(argc, argv, "sim_motor_cmds");
+    ros::init(argc, argv, "motor_cmds");
     ros::NodeHandle nh;
-    //ros::NodeHandle nh_priv("~");
-
-
-    // std::ifstream in_file(argv[1]);
-    // if(!in_file.is_open()) {
-    //     ROS_INFO_STREAM("error opening file");
-    //     return 0;
-    // }
-
-    // std::vector<geometry_msgs::Point> fake_path;
-    // double x, y;
-
-    // while(in_file >> x >> y) {
-    //     geometry_msgs::Point p;
-    //     p.x = x;
-    //     p.y = y;
-    //     fake_path.push_back(p);
-    // }
+    
 
     geometry_msgs::Point p1;
     geometry_msgs::Point p2;
     p1.x = 5; p1.y = 5;
     p2.x = 5; p2.y = 5;
 
-    // pub as turtle1/cmd as an intermidiate for adjust_ori_node to fix Gazebo orientation
+    // pub as turtle1/cmd as an intermidiate for adjust_ori_node to fix orientation 
+    // for Gazebo with the goat_description simulation
     ros::Publisher pub = nh.advertise<geometry_msgs::Twist>("turtle1/cmd_vel", 1000);
 
     Robot my_bot{nh, pub, {p1, p2}};
