@@ -11,10 +11,13 @@ import time
 
 import pyzed.sl as sl
 import rospy
+from sensor_msgs.msg import PointCloud2 
+from sensor_msgs import point_cloud2
 
 class Detect:
 		
 	def __init__(self):
+		self.pub = rospy.Publisher('white_line_out', PointCloud2, queue_size=10)
 		self.zed = sl.Camera() 
 		#GET IMAGE FROM ZED
 		init_params = sl.InitParameters()
@@ -97,7 +100,6 @@ class Detect:
 	#	cv2.imshow("yo",lane_test_image_cpu)
 	#	cv2.waitKey(1000)
 		
-
 
 		GRADIENT_THRESH = (20,100)
 		L_CHANNEL_THRESH = (130,255)
@@ -191,7 +193,7 @@ class Detect:
 		cv2.fillPoly(window_img, np.int_([right_line_pts]), (0,255, 0))
 		result = cv2.addWeighted(out_img, 1, window_img, 0.3, 0)
 
-
+		self.publish(ploty,left_fitx,right_fitx)
 		print(time.time() - first)
 		
 
@@ -201,6 +203,45 @@ class Detect:
 	#	axarr[0].plot(left_fitx,ploty,color='red')
 	#	axarr[0].plot(right_fitx,ploty,color='red')
 	#	plt.show()
+	
+	def dtype_to_fields(self,dtype):
+		fields = []
+		for field_name in dtype.names:
+			np_field_type, field_offset = dtype.fields[field_name]
+			pf = PointField()
+			pf.name = field_name
+			if np_field_type.subdtype:
+				item_dtype, shape = np_field_type.subdtype
+				pf.count = np.prod(shape)
+				np_field_type = item_dtype
+			else:
+				pf.count = 1
+ 
+			pf.datatype = nptype_to_pftype[np_field_type]
+			pf.offset = field_offset
+			fields.append(pf)
+		return fields
+	
+	def publish(self,ploty,left_fit_x,right_fit_x):
+		
+		message = PointCloud2()
+		message.header.frame_id = "frame-id"
+		
+		out_arr = np.zeros((ploty.__len__(),1080),dtype=np.int32)
+		print(out_arr.dtype)
+		
+		
+		message.height = out_arr.shape[0]
+		message.width = out_arr.shape[1]
+		message.fields = self.dtype_to_fields(out_arr.dtype)
+		message.point_step = out_arr.dtype.itemsize
+		message.row_step = message.point_step * out_arr.shape[1]
+		message.is_dense = False
+		
+		message.data = out_arr.tostring()
+		
+		
+		self.pub.publish(message)
 
 		
 
