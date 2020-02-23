@@ -11,10 +11,24 @@ import time
 
 import pyzed.sl as sl
 import rospy
-from sensor_msgs.msg import PointCloud2 
+from sensor_msgs.msg import PointCloud2, PointField
 from sensor_msgs import point_cloud2
+from std_msgs.msg import Header
 
 class Detect:
+	
+	
+	# mappings between PointField types and numpy types
+	type_mappings = [(PointField.INT8, np.dtype('int8')), (PointField.UINT8, np.dtype('uint8')), (PointField.INT16, np.dtype('int16')),
+                  (PointField.UINT16, np.dtype('uint16')), (PointField.INT32, np.dtype('int32')), (PointField.UINT32, np.dtype('uint32')),
+                  (PointField.FLOAT32, np.dtype('float32')), (PointField.FLOAT64, np.dtype('float64'))]
+	pftype_to_nptype = dict(type_mappings)
+	nptype_to_pftype = dict((nptype, pftype) for pftype, nptype in type_mappings)
+ 
+	# sizes (in bytes) of PointField types
+	pftype_sizes = {PointField.INT8: 1, PointField.UINT8: 1, PointField.INT16: 2, PointField.UINT16: 2,
+                 PointField.INT32: 4, PointField.UINT32: 4, PointField.FLOAT32: 4, PointField.FLOAT64: 8}
+ 
 		
 	def __init__(self):
 		self.pub = rospy.Publisher('white_line_out', PointCloud2, queue_size=10)
@@ -84,15 +98,16 @@ class Detect:
 	def main(self,callback_data):
 		first = time.time()
 	
-		image = sl.Mat()
+		#image = sl.Mat()
 		
-		if (self.zed.grab(sl.RuntimeParameters()) == sl.ERROR_CODE.SUCCESS):
+		#if (self.zed.grab(sl.RuntimeParameters()) == sl.ERROR_CODE.SUCCESS):
 				# A new image is available if grab() returns SUCCESS
-				self.zed.retrieve_image(image, sl.VIEW.VIEW_LEFT)
+		#		self.zed.retrieve_image(image, sl.VIEW.VIEW_LEFT)
 		
 
-		#TEST_IMAGE = "assets/Im3.png"
-		lane_test_image_cpu = image.get_data()
+		TEST_IMAGE = "assets/Im3.png"
+		#lane_test_image_cpu = image.get_data()
+		lane_test_image_cpu = cv2.imread(TEST_IMAGE)
 		lane_test_image = cv2.UMat(lane_test_image_cpu)
 		lane_test_image = cv2.cvtColor(lane_test_image,cv2.COLOR_BGR2RGB)
 		#plt.imshow(lane_test_image_cpu)
@@ -149,7 +164,7 @@ class Detect:
 
 		histogram = np.sum(binary_warped[int(binary_warped.shape[0]/2):,:],axis=0)
 
-	#	plt.plot(histogram)
+		#plt.plot(histogram)
 
 	#	plt.imshow(binary_warped)
 
@@ -171,11 +186,12 @@ class Detect:
 		out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
 		out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
 
-	#	plt.imshow(warped_cp)
+		#plt.imshow(warped_cp)
 
-	#	plt.imshow(out_img)
+		#plt.imshow(out_img)
 
 		left_lane_inds,right_lane_inds, ploty, left_fitx,right_fitx = self.get_lane_indices_from_prev_window( binary_warped,left_fit,right_fit,MARGIN)
+
 
 		out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
 		window_img = np.zeros_like(out_img)
@@ -195,6 +211,7 @@ class Detect:
 
 		self.publish(ploty,left_fitx,right_fitx)
 		print(time.time() - first)
+		plt.show()
 		
 
 	#	f, axarr = plt.subplots(1,2)
@@ -217,33 +234,55 @@ class Detect:
 			else:
 				pf.count = 1
  
-			pf.datatype = nptype_to_pftype[np_field_type]
+			pf.datatype = self.nptype_to_pftype[np_field_type]
 			pf.offset = field_offset
 			fields.append(pf)
 		return fields
 	
+	def array_to_pointcloud2(self,cloud_arr, stamp=None, frame_id=None):
+		'''Converts a numpy record array to a sensor_msgs.msg.PointCloud2.
+		'''
+		# make it 2d (even if height will be 1)
+		cloud_arr = np.atleast_2d(cloud_arr)
+ 
+		cloud_msg = PointCloud2()
+ 
+		if stamp is not None:
+			cloud_msg.header.stamp = stamp
+		if frame_id is not None:
+			cloud_msg.header.frame_id = frame_id
+		cloud_msg.height = cloud_arr.shape[0]
+		cloud_msg.width = cloud_arr.shape[1]
+		cloud_msg.fields = self.dtype_to_fields(cloud_arr.dtype)
+		cloud_msg.is_bigendian = False # assumption
+		cloud_msg.point_step = cloud_arr.dtype.itemsize
+		cloud_msg.row_step = cloud_msg.point_step*cloud_arr.shape[1]
+		cloud_msg.is_dense = all([np.isfinite(cloud_arr[fname]).all() for fname in cloud_arr.dtype.names])
+		cloud_msg.data = cloud_arr.tostring()
+		return cloud_msg
+	
 	def publish(self,ploty,left_fit_x,right_fit_x):
-		
-		message = PointCloud2()
-		message.header.frame_id = "frame-id"
-		
-		out_arr = np.zeros((ploty.__len__(),1080),dtype=np.int32)
-		print(out_arr.dtype)
+		left_fit_x = np.around(left_fit_x)
+		right_fit_x = np.around(right_fit_x)
+		message = Header()
+		message.frame_id = "baselink"
 		
 		
-		message.height = out_arr.shape[0]
-		message.width = out_arr.shape[1]
-		message.fields = self.dtype_to_fields(out_arr.dtype)
-		message.point_step = out_arr.dtype.itemsize
-		message.row_step = message.point_step * out_arr.shape[1]
-		message.is_dense = False
+		out_arr = np.zeros((len(ploty)*2),dtype=np.dtype([('x',np.float32,1),('y',np.float32,1),('z',np.float32,1),('intensity',np.float32,1)]))
+		#out_arr = np.zeros((ploty.__len__(),1200),dtype=np.dtype([('placeholder',np.int16,16)]))
+		for i,val in enumerate(ploty):
+			out_arr[i]['y'] = ploty[i]
+			out_arr[i]['x'] = left_fit_x[i]
+			out_arr[i+712]['y'] = ploty[i]
+			out_arr[i+712]['x'] = right_fit_x[i] 
 		
-		message.data = out_arr.tostring()
+		out_arr[:]['intensity'] = 125
+		out_arr[:]['z'] = 1
 		
-		
-		self.pub.publish(message)
-
-		
+		test = self.array_to_pointcloud2(out_arr,frame_id = message.frame_id)
+				
+		self.pub.publish(test)
+				
 
 	def histo_peak(self,histo):
 		"""Find left and right peaks of histogram"""
